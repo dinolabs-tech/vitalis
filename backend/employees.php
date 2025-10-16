@@ -1,0 +1,183 @@
+<?php
+session_start();
+include_once('database/db_connect.php');
+
+if (!isset($_SESSION['loggedin']) || $_SESSION['role'] !== 'admin') {
+  header("Location: login.php");
+  exit;
+}
+
+$employees = [];
+$sql = "SELECT id, staffname, email, mobile, role, status FROM login ORDER BY staffname";
+$result = $conn->query($sql);
+
+if ($result && $result->num_rows > 0) {
+  while ($row = $result->fetch_assoc()) {
+    $employees[] = $row;
+  }
+}
+
+if (isset($_POST['id'])) {
+  $delete_id = $_POST['id'];
+  $stmt = $conn->prepare("DELETE FROM login WHERE id = ?");
+  $stmt->bind_param("i", $delete_id);
+  if ($stmt->execute()) {
+    $success_message = "Employee deleted successfully!";
+  } else {
+    $error_message = "Failed to delete employee.";
+  }
+  $stmt->close();
+  header("Location: employees.php?success=" . urlencode($success_message));
+  exit;
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<?php include('components/head.php'); ?>
+
+<body>
+  <div class="wrapper">
+    <?php include('components/sidebar.php'); ?>
+
+    <div class="main-panel">
+      <?php include('components/navbar.php'); ?>
+
+      <div class="container">
+        <div class="page-inner">
+
+          <div class="page-header">
+            <h3 class="fw-bold mb-3">Employees</h3>
+            <ul class="breadcrumbs mb-3">
+              <li class="nav-home">
+                <a href="#">
+                  <i class="icon-home"></i>
+                </a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="#">Employees</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+
+            <?php if ($_SESSION['role'] === 'admin'): ?>
+              <div class="ms-md-auto py-2 py-md-0">
+                <a href="add-employee.php" class="btn btn-primary btn-round">Add Employee</a>
+              </div>
+            <?php endif; ?>
+          </div>
+
+         
+          <div class="card p-3">
+            <div class="row">
+              <div class="col-md-12">
+                 <?php if (isset($error_message)): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <?php echo $error_message; ?>
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          <?php endif; ?>
+          <?php if (isset($success_message)): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <?php echo $success_message; ?>
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          <?php endif; ?>
+                <div class="table-responsive">
+                  <table class="table table-striped custom-table" id="basic-datatables">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Employee ID</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Role</th>
+                        <th class="text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php if (empty($employees)): ?>
+                        <tr>
+                          <td colspan="6" class="text-center">No employees found.</td>
+                        </tr>
+                      <?php else: ?>
+                        <?php foreach ($employees as $employee): ?>
+                          <tr>
+                            <td>
+                              <div class="d-flex">
+                                <img width="28" height="28" src="assets/img/user.jpg" class="rounded-circle" alt="">&nbsp;&nbsp;
+                                <h6><?php echo htmlspecialchars($employee['staffname']); ?></h6>
+                              </div>
+                            </td>
+                            <td>EMP-<?php echo htmlspecialchars($employee['id']); ?></td>
+                            <td><?php echo htmlspecialchars($employee['email']); ?></td>
+                            <td><?php echo htmlspecialchars($employee['mobile']); ?></td>
+                            <td>
+                              <span class="custom-badge status-green"><?php echo htmlspecialchars(ucfirst($employee['role'])); ?></span>
+                            </td>
+                            <td class="text-right d-flex">
+                              <a href="edit-employee.php?id=<?php echo $employee['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
+                              <a href="#" data-id="<?php echo $employee['id']; ?>" class="btn-icon btn-danger btn-round text-white btn-delete-employee ms-2"><i class="fas fa-trash"></i></a>
+                            </td>
+                          </tr>
+                        <?php endforeach; ?>
+                      <?php endif; ?>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Delete Confirmation Modal -->
+      <div class="modal fade" id="deleteEmployeeModal" tabindex="-1" role="dialog" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-body text-center">
+              <img src="assets/img/sent.png" alt="" width="50" height="46">
+              <h3 id="deleteMessage">Are you sure you want to delete this employee?</h3>
+              <div class="m-t-20">
+                <a href="#" class="btn btn-white" data-dismiss="modal">Cancel</a>
+                <form id="deleteEmployeeForm" method="POST" action="employees.php" style="display:inline;">
+                  <input type="hidden" name="id" id="delete_employee_id">
+                  <button type="submit" class="btn btn-danger rounded">Delete</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <?php include('components/footer.php'); ?>
+    </div>
+  </div>
+  <?php include('components/script.php'); ?>
+
+  <script>
+    $(document).ready(function() {
+      $('.btn-delete-employee').on('click', function(e) {
+        e.preventDefault();
+        var employeeId = $(this).data('id');
+        var employeeName = $(this).closest('tr').find('h6').text();
+
+        $('#delete_employee_id').val(employeeId);
+        $('#deleteMessage').text("Are you sure you want to delete " + employeeName + "'s record?");
+        $('#deleteEmployeeModal').modal('show');
+      });
+    });
+  </script>
+
+</body>
+
+</html>

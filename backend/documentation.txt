@@ -1,0 +1,236 @@
+# VitalisModel Application Documentation
+
+## 1. General Application Overview
+
+### 1.1 Purpose
+The VitalisModel application is a comprehensive Hospital/Clinic Management System designed to streamline various administrative and medical operations within a healthcare facility. It provides functionalities for managing patients, doctors, appointments, medical records, billing, inventory, and more, aiming to improve efficiency and organization.
+
+### 1.2 Key Features
+*   **Dashboard:** Provides a centralized overview of key metrics such as total patients, doctors, appointments, room occupancy, pending lab tests/radiology, and financial summaries (pending/paid/cancelled bills, monthly payroll). It also includes appointment trends and top procedures.
+*   **User Authentication & Role Management:** Secure login system with distinct roles (Admin, Doctor, Receptionist, Pharmacist, Nurse, Lab Technician), each having access to specific functionalities and views.
+*   **Patient Management:** Functionalities to add, edit, and view patient details, medical records, vitals, admissions (IPD/ER), and bills.
+*   **Doctor Management:** Manage doctor profiles, schedules, and notes.
+*   **Appointment Scheduling:** Create, edit, and manage patient appointments.
+*   **Billing & Payments:** Handle patient bills, invoices, and payment processing.
+*   **Medication & Pharmacy:** Manage medications, prescriptions, and drug administration/consultation.
+*   **Lab & Radiology:** Track lab tests, test samples, and radiology records.
+*   **Room & Bed Management:** Monitor room occupancy and availability.
+*   **Employee & Payroll Management:** Manage employee details, attendance, leaves, and salaries.
+*   **Inventory/Product Management:** Manage products and stock transfers.
+*   **Branch & Department Management:** Organize the facility by branches and departments.
+*   **Audit Logs:** (Implied by `audit-logs.php`) Likely tracks system activities for accountability.
+
+### 1.3 Technologies Used
+*   **Backend:** PHP (server-side scripting)
+*   **Database:** MySQL (for data storage)
+*   **Frontend:** HTML, CSS (Kaiadmin/Bootstrap framework), JavaScript (for interactive elements and charts)
+*   **Web Server:** Apache (typically part of XAMPP)
+
+### 1.4 Setup and Installation (Local Development - XAMPP)
+The application is designed to run in a local XAMPP environment.
+1.  **Prerequisites:** XAMPP (Apache, MySQL, PHP) installed and running.
+2.  **Database Configuration:** The application automatically attempts to create a database named `vitalis` if it doesn't exist. It connects using `localhost`, `root` username, and an empty password.
+3.  **Initial Admin Account:** Upon first run of `login.php`, an admin account is automatically created if one doesn't exist:
+    *   **Username:** `dinolabs`
+    *   **Password:** `dinolabs`
+    *   **Role:** `admin`
+
+## 2. Module Relationships
+
+The VitalisModel application is structured modularly, with various PHP files handling specific functionalities and interacting with each other and the database.
+
+*   **Core System Files:**
+    *   `index.php`: The main dashboard, displaying aggregated data and acting as the central hub after login. It includes various components and fetches data from multiple tables.
+    *   `login.php`: Handles user authentication, session management, and initial admin account creation. Redirects users to `index.php` based on their role.
+    *   `register.php`: (Presumed) Handles new user registration.
+    *   `forgot-password.php`: Handles password recovery.
+    *   `database/db_connect.php`: Establishes and manages the MySQL database connection, including database creation if necessary.
+    *   `includes/config.php`: Central configuration file, includes `db_connect.php` and defines global variables/constants.
+    *   `includes/checklogin.php`: (Presumed) Used to verify if a user is logged in before accessing protected pages.
+    *   `code.php`: Contains utility functions, e.g., `setSessionMessage` for displaying feedback messages.
+
+*   **UI Components (`components/` directory):**
+    *   `head.php`: Contains HTML head section (meta tags, CSS links).
+    *   `sidebar.php`: Manages the navigation menu, likely dynamically displaying options based on user roles.
+    *   `navbar.php`: Top navigation bar.
+    *   `footer.php`: Page footer.
+    *   `script.php`: Contains JavaScript includes and custom scripts.
+
+*   **CRUD Modules (Create, Read, Update, Delete):**
+    The application follows a common pattern for managing entities, typically with `add-`, `edit-`, and a main listing page (e.g., `patients.php`, `doctors.php`). Each of these files interacts with the database to perform its respective operation.
+
+    *   **Patient Management:**
+        *   `patients.php`: Lists all patients.
+        *   `add-patient.php`: Adds a new patient record to the `patients` table.
+        *   `edit-patient.php`: Modifies an existing patient record.
+        *   `patient-vitals.php`, `add-patient-vital.php`, `edit-patient-vital.php`: Manage patient vital signs.
+        *   `medical_record_management.php`, `add-medical-record.php`, `edit-medical-record.php`: Handle patient medical history.
+        *   `admissions.php`, `add-admission.php`, `edit-admission.php`: General admissions.
+        *   `ipd-admissions.php`, `add-ipd-admission.php`, `edit-ipd-admission.php`: In-patient department admissions.
+        *   `er_visits.php`, `add-er-visit.php`, `edit-er-visit.php`: Emergency room visits.
+        *   `patient-bills.php`, `add-patient-bill.php`, `edit-patient-bill.php`: Manage patient billing.
+
+    *   **Doctor & Staff Management:**
+        *   `doctors.php`, `add-doctor.php`, `edit-doctor.php`: Manage doctor profiles.
+        *   `employees.php`, `add-employee.php`, `edit-employee.php`: Manage general employee records.
+        *   `departments.php`, `add-department.php`, `edit-department.php`: Manage hospital departments.
+        *   `branches.php`, `add-branch.php`, `edit-branch.php`: Manage hospital branches.
+        *   `schedule.php`, `add-schedule.php`, `edit-schedule.php`: Manage doctor/staff schedules.
+        *   `attendance.php`, `add-attendance.php`, `edit-attendance.php`, `delete-attendance.php`: Track employee attendance.
+        *   `leaves.php`, `add-leave.php`, `edit-leave.php`, `leave-type.php`, `add-leave-type.php`: Manage employee leaves.
+        *   `salary.php`, `add-salary.php`, `edit-salary.php`, `salary-view.php`: Handle payroll and salary processing.
+        *   `provident-fund.php`, `add-provident-fund.php`, `edit-provident-fund.php`, `create-provident-fund.php`: Manage provident fund details.
+
+    *   **Appointment Management:**
+        *   `appointments.php`, `add-appointment.php`, `edit-appointment.php`: Manage patient appointments.
+
+    *   **Medical Services & Records:**
+        *   `medications.php`, `add-medication.php`, `edit-medication.php`: Manage available medications.
+        *   `prescriptions.php`, `add-prescription.php`, `edit-prescription.php`: Handle patient prescriptions.
+        *   `drug_administration.php`, `add-drug-administration.php`, `edit-drug-administration.php`: Record drug administration.
+        *   `drug_consultation.php`, `add-drug-consultation.php`, `edit-drug-consultation.php`: Record drug consultations.
+        *   `lab-tests.php`, `add-lab-test.php`, `edit-lab-test.php`: Manage lab tests.
+        *   `test-samples.php`, `add-test-sample.php`, `edit-test-sample.php`: Manage test samples.
+        *   `radiology-records.php`, `add-radiology-record.php`, `edit-radiology-record.php`: Manage radiology records.
+        *   `doctor-notes.php`, `add-doctor-note.php`, `edit-doctor-note.php`: Manage doctor's notes.
+        *   `operations.php`, `add-operation.php`, `edit-operation.php`: Manage surgical operations.
+        *   `vaccinations.php`, `add-vaccination.php`, `edit-vaccination.php`: Manage vaccinations.
+        *   `icu_monitoring.php`, `add-icu-monitoring.php`, `edit-icu-monitoring.php`: Manage ICU patient monitoring.
+
+    *   **Financial & Inventory:**
+        *   `invoices.php`, `add-invoice.php`, `edit-invoice.php`, `invoice-view.php`: Manage invoices.
+        *   `payments.php`, `add-payment.php`, `edit-payment.php`: Process payments.
+        *   `expenses.php`, `add-expense.php`, `edit-expense.php`: Track hospital expenses.
+        *   `products.php`, `add-product.php`, `edit-product.php`: Manage product inventory.
+        *   `stock-transfers.php`, `add-stock-transfer.php`, `edit-stock-transfer.php`: Manage stock movements.
+        *   `services.php`, `add-service.php`, `edit-service.php`: Manage hospital services.
+        *   `taxes.php`, `add-tax.php`, `edit-tax.php`: Manage tax settings.
+        *   `fee-settings.php`: (Presumed) Configure various fees.
+
+    *   **Other Utility/System Files:**
+        *   `rooms.php`, `add-room.php`, `edit-room.php`: Manage hospital rooms.
+        *   `holidays.php`, `add-holiday.php`, `edit-holiday.php`: Manage holidays.
+        *   `audit-logs.php`: View system audit trails.
+        *   `profile.php`: User profile management.
+        *   `starter-template.php`: A template for new pages.
+
+## 3. Role-Based Documentation
+
+The VitalisModel application implements role-based access control, ensuring that users only have access to functionalities relevant to their responsibilities. The primary roles identified are Admin, Doctor, Receptionist, Pharmacist, Nurse, and Lab Technician.
+
+### 3.1 Admin Role
+The Admin role has full access to all functionalities within the system. This includes:
+*   **Dashboard:** Full view of all metrics and statistics.
+*   **User Management:** Create, edit, and delete user accounts and assign roles.
+*   **Master Data Management:** Full control over patients, doctors, employees, departments, branches, rooms, services, products, medications, taxes, leave types, holidays.
+*   **Financial Management:** Oversee all billing, invoices, payments, expenses, and payroll.
+*   **Reporting & Analytics:** Access to all reports and trends.
+*   **System Configuration:** Manage system settings, fee settings, etc.
+*   **Audit Logs:** View all system activities.
+
+### 3.2 Doctor Role
+Doctors have access to patient-centric functionalities and their own schedules.
+*   **Dashboard:** View doctor-specific metrics (appointments today, patients attended) in addition to general hospital statistics.
+*   **Patient Management:** View patient profiles, medical records, vitals, admissions, ER visits.
+*   **Appointments:** View and manage their own appointments.
+*   **Prescriptions & Medications:** Create and manage prescriptions, drug administration, and consultations.
+*   **Doctor Notes:** Add and manage their own clinical notes for patients.
+*   **Lab & Radiology:** View results of lab tests and radiology records for their patients.
+*   **Operations:** View and manage operations they are involved in.
+*   **Profile:** Manage their own profile.
+
+### 3.3 Receptionist Role
+Receptionists primarily handle patient registration, appointments, and basic inquiries.
+*   **Patient Management:** Add new patients, view patient details.
+*   **Appointment Scheduling:** Create, edit, and manage appointments for all doctors.
+*   **Billing & Invoicing:** Generate patient bills and invoices, process payments.
+*   **Room Management:** Check room availability and occupancy.
+*   **General Inquiries:** Provide information to patients.
+
+### 3.4 Pharmacist Role
+Pharmacists manage medication inventory and dispense drugs.
+*   **Medication Management:** Add, edit, and manage medication inventory.
+*   **Prescription Fulfillment:** View prescriptions and dispense medications.
+*   **Drug Administration/Consultation:** Record drug administration and consultations.
+*   **Product Management:** Manage general products and stock transfers.
+
+### 3.5 Nurse Role
+Nurses are involved in patient care, vital sign monitoring, and assisting doctors.
+*   **Patient Management:** View patient details, add/edit patient vitals.
+*   **Admissions:** Assist with IPD and ER admissions.
+*   **Medication Administration:** Record drug administration.
+*   **ICU Monitoring:** Manage ICU patient monitoring records.
+*   **Vaccinations:** Record patient vaccinations.
+*   **Doctor Notes:** (Potentially) Assist in managing doctor's notes or view them.
+
+### 3.6 Lab Technician Role
+Lab Technicians handle lab tests and samples.
+*   **Lab Test Management:** Add, edit, and manage lab tests.
+*   **Test Sample Management:** Process and track test samples.
+*   **Radiology Records:** (Potentially) Manage radiology records if cross-trained or part of their scope.
+
+## 4. Detailed Usage Instructions
+
+This section provides general usage instructions for common workflows. Specific steps may vary slightly depending on the exact implementation of each page.
+
+### 4.1 Logging In
+1.  Open the application in your web browser (e.g., `http://localhost/vitalismodel/login.php`).
+2.  Enter your **Username** or **Email** and **Password**.
+3.  Click the **Login** button.
+4.  If successful, you will be redirected to the Dashboard (`index.php`). If it's the first time running the app and no admin exists, use `dinolabs` for both username and password.
+
+### 4.2 Navigating the Dashboard
+*   After logging in, the dashboard provides an overview.
+*   Key metrics are displayed in cards at the top.
+*   Charts (User Statistics, Daily Sales, Appointment Trends, Top Procedures) provide visual insights.
+*   The Bed Occupancy Map shows room statuses.
+*   Doctors will see additional cards with their specific metrics.
+*   Use the sidebar navigation to access different modules (Patients, Doctors, Appointments, etc.).
+
+### 4.3 Adding a New Patient (Receptionist/Admin)
+1.  Log in as a Receptionist or Admin.
+2.  Navigate to the **Patients** module (e.g., by clicking "Patients" in the sidebar).
+3.  Click on the **"Add Patient"** button (or similar).
+4.  Fill in all required patient details (name, contact, address, date of birth, gender, etc.).
+5.  Click **"Save"** or **"Submit"** to create the new patient record.
+
+### 4.4 Scheduling an Appointment (Receptionist/Admin)
+1.  Log in as a Receptionist or Admin.
+2.  Navigate to the **Appointments** module.
+3.  Click on the **"Add Appointment"** button.
+4.  Select the **Patient** from a dropdown list (or add a new patient if not existing).
+5.  Select the **Doctor** for the appointment.
+6.  Choose the **Appointment Date** and **Time**.
+7.  Specify the **Reason for Appointment**.
+8.  Click **"Save"** or **"Schedule"**.
+
+### 4.5 Viewing Patient Medical Records (Doctor/Nurse/Admin)
+1.  Log in as a Doctor, Nurse, or Admin.
+2.  Navigate to the **Patients** module.
+3.  Find the desired patient in the list and click on their name or a **"View Details"** button.
+4.  Within the patient's profile, navigate to sections like "Medical Records," "Vitals," "Admissions," "Prescriptions" to view relevant information.
+
+### 4.6 Managing Medications (Pharmacist/Admin)
+1.  Log in as a Pharmacist or Admin.
+2.  Navigate to the **Medications** module.
+3.  To add a new medication: Click **"Add Medication"**, fill in details (name, dosage, stock, price), and save.
+4.  To edit: Find the medication in the list, click **"Edit"**, make changes, and save.
+5.  To view prescriptions: Navigate to the **Prescriptions** module to see pending and fulfilled prescriptions.
+
+### 4.7 Processing a Patient Bill (Receptionist/Admin)
+1.  Log in as a Receptionist or Admin.
+2.  Navigate to the **Patient Bills** or **Invoices** module.
+3.  Click **"Add Patient Bill"** or select an existing pending bill.
+4.  Select the **Patient** and add **Services/Products** with their respective quantities and prices.
+5.  The total amount will be calculated.
+6.  Process payment (if applicable) and update the bill status (e.g., to "Paid").
+7.  Generate an invoice if needed.
+
+### 4.8 Managing Doctor Schedules (Admin)
+1.  Log in as an Admin.
+2.  Navigate to the **Schedule** module.
+3.  Select a doctor.
+4.  Add or edit their working hours, days off, and availability.
+5.  Save the changes to update the doctor's schedule.
+
+This documentation provides a comprehensive overview of the VitalisModel application.
