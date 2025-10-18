@@ -37,7 +37,7 @@ if ($result) {
   $totalPatients = $result->fetch_assoc()['count'];
 }
 
-$query = "SELECT COUNT(*) AS count FROM doctors";
+$query = "SELECT COUNT(*) AS count FROM login where role ='doctor'";
 $result = $mysqli->query($query);
 if ($result) {
   $totalDoctors = $result->fetch_assoc()['count'];
