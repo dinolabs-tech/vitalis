@@ -1,12 +1,9 @@
 <!-- login23:11-->
 <?php
-include_once('database/database_schema.php'); // Include database connection
+// include_once('database/database_schema.php'); // Include database connection
 include_once('database/db_connect.php'); // Include database connection
 include('components/head.php');
-?>
 
-
-<?php
 // Check if admin account exists, if not, create it
 $admin_username = 'dinolabs';
 $admin_password_plain = 'dinolabs';
