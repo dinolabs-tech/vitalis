@@ -7,4 +7,4 @@ global $mysqli;
 $mysqli = $conn;
 
 // Define base URL for redirects if needed
-define('BASE_URL', 'http://localhost/doctor/backend/');
+define('BASE_URL', 'https://www.dinolabstech.com/vitalis/backend/');
