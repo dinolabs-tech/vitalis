@@ -1,4 +1,7 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Include the database connection file
 require_once 'db_connect.php';
 
@@ -826,20 +829,20 @@ $tables = [
 // Execute table creation
 foreach ($tables as $table) {
     createTable($conn, $table['sql'], $table['name']);
-}
 
-// Special handling for settings table to insert default delivery fee and OPD visit fee
-if ($table['name'] === 'settings') {
-    $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('delivery_fee', '1000') ON DUPLICATE KEY UPDATE setting_key=setting_key");
-    $stmt->execute();
-    $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('opd_visit_fee', '500') ON DUPLICATE KEY UPDATE setting_key=setting_key");
-    $stmt->execute();
-    // Add default language setting
-    $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('default_language', 'en') ON DUPLICATE KEY UPDATE setting_key=setting_key");
-    $stmt->execute();
-    // Add default currency setting
-    $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('default_currency', 'USD') ON DUPLICATE KEY UPDATE setting_key=setting_key");
-    $stmt->execute();
+    // Special handling for settings table to insert default delivery fee and OPD visit fee
+    if ($table['name'] === 'settings') {
+        $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('delivery_fee', '1000') ON DUPLICATE KEY UPDATE setting_key=setting_key");
+        $stmt->execute();
+        $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('opd_visit_fee', '500') ON DUPLICATE KEY UPDATE setting_key=setting_key");
+        $stmt->execute();
+        // Add default language setting
+        $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('default_language', 'en') ON DUPLICATE KEY UPDATE setting_key=setting_key");
+        $stmt->execute();
+        // Add default currency setting
+        $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('default_currency', 'USD') ON DUPLICATE KEY UPDATE setting_key=setting_key");
+        $stmt->execute();
+    }
 }
 
 // Create default admin user
