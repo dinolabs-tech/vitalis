@@ -1,6 +1,6 @@
 <!-- login23:11-->
 <?php
-// include_once('database/database_schema.php'); // Include database connection
+include_once('database/database_schema.php'); // Include database connection
 include_once('database/db_connect.php'); // Include database connection
 include('components/head.php');
 
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-lg-4 col-md-6 col-sm-8 d-flex flex-column align-items-center justify-content-center">
                         <div class="card w-100">
                             <div class="card-header">
-                                <h3 class="text-center">Login</h3>
+                                <h3 class="text-center">Login aa</h3>
                             </div>
                             <div class="card-body">
                                 <form action="login.php" method="post">
