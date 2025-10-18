@@ -176,7 +176,7 @@ if (isset($_POST['change_password'])) {
                                             <input type="file" class="form-control-file form-control" id="profile_picture" name="profile_picture">
                                             <?php if ($user->profile_picture) { ?>
                                                 <div class="avatar avatar-xxl">
-                                                    <img src="assets/img/profile/<?php echo htmlentities($user->profile_picture); ?>" class="avatar-img rounded-circle" alt="Profile Picture" width="100" class="mt-2">
+                                                    <img src="assets/img/profile/<?php echo htmlentities($user->profile_picture); ?>" class="avatar-img rounded-circle mt-3" alt="Profile Picture" width="100" class="mt-2">
                                                 </div>
                                             <?php } ?>
                                         </div>
