@@ -1,8 +1,8 @@
-<!-- login23:11-->
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 // include_once('database/database_schema.php'); // Include database connection
 include_once('database/db_connect.php'); // Include database connection
-include('components/head.php');
 
 // Check if admin account exists, if not, create it
 $admin_username = 'dinolabs';
