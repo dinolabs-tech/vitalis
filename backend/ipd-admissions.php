@@ -60,7 +60,7 @@ $sql = "SELECT ia.*, p.first_name, p.last_name, r.room_number, d.staffname as do
         FROM ipd_admissions ia
         LEFT JOIN patients p ON ia.patient_id = p.patient_id
         LEFT JOIN rooms r ON ia.room_id = r.id
-        LEFT JOIN doctors doc ON ia.doctor_id = doc.id
+        LEFT JOIN login doc ON ia.doctor_id = doc.id
         LEFT JOIN login d ON doc.staff_id = d.id
         LEFT JOIN branches b ON ia.branch_id = b.branch_id
         ORDER BY ia.admission_date DESC";
