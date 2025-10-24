@@ -91,12 +91,12 @@ if (isset($_POST['id'])) {
             </div>
           <?php endif; ?>
 
-         
-            <div class="row">
-              <div class="col-md-12">
-                <div class="card">
-                  <div class="card-body">
-                      <div class="table-responsive">
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-body">
+                  <div class="table-responsive">
                     <table class="table table-striped custom-table" id="basic-datatables">
                       <thead>
                         <tr>
@@ -119,43 +119,43 @@ if (isset($_POST['id'])) {
                               <td><?php echo htmlspecialchars($department['name']); ?></td>
                               <td><?php echo htmlspecialchars($department['description']); ?></td>
                               <td class="text-right d-flex">
-                                  <a href="edit-department.php?id=<?php echo $department['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
-                                  <a href="#" data-id="<?php echo $department['id']; ?>" data-department-name="<?php echo htmlspecialchars($department['name']); ?>" class="btn-icon btn-danger btn-round text-white btn-delete-department"><i class="fas fa-trash"></i></a>
-                             </td>
+                                <a href="edit-department.php?id=<?php echo $department['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
+                                <a href="#" data-id="<?php echo $department['id']; ?>" data-department-name="<?php echo htmlspecialchars($department['name']); ?>" class="btn-icon btn-danger btn-round text-white btn-delete-department"><i class="fas fa-trash"></i></a>
+                              </td>
                             </tr>
                           <?php endforeach; ?>
                         <?php endif; ?>
                       </tbody>
                     </table>
                   </div>
-                  </div>
                 </div>
-                
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div id="delete_department_modal" class="modal fade" role="dialog">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-body text-center">
-              <img src="assets/img/sent.png" alt="" width="50" height="46">
-              <h3 id="delete-department-message">Are you sure you want to delete this department?</h3>
-              <div class="m-t-20">
-                <a href="#" class="btn btn-white" data-dismiss="modal">Close</a>
-                <form id="deleteDepartmentForm" method="POST" action="departments.php" style="display: inline;">
-                  <input type="hidden" name="id" id="delete-department-id">
-                  <button type="submit" class="btn btn-danger rounded">Delete</button>
-                </form>
-              </div>
             </div>
           </div>
         </div>
       </div>
-      <?php include('components/footer.php'); ?>
     </div>
+
+    <div id="delete_department_modal" class="modal fade" role="dialog">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <img src="assets/img/sent.png" alt="" width="50" height="46">
+            <h3 id="delete-department-message">Are you sure you want to delete this department?</h3>
+            <div class="m-t-20">
+              <a href="#" class="btn btn-white" data-dismiss="modal">Close</a>
+              <form id="deleteDepartmentForm" method="POST" action="departments.php" style="display: inline;">
+                <input type="hidden" name="id" id="delete-department-id">
+                <button type="submit" class="btn btn-danger rounded">Delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <?php include('components/footer.php'); ?>
   </div>
   <?php include('components/script.php'); ?>
   <script>

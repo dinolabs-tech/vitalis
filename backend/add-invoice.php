@@ -365,7 +365,6 @@ if (isset($_POST['submit'])) {
 
     <?php include('components/footer.php'); ?>
   </div>
-  </div>
   <?php include('components/script.php'); ?>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
