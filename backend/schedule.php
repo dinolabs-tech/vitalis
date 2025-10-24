@@ -39,7 +39,7 @@ $sql = "SELECT ds.id, l.specialization, l.staffname AS doctor_name, ds.day_of_we
         ";
 $result = $conn->query($sql);
 
-?>x
+?>
 
 <!DOCTYPE html>
 <html lang="en">

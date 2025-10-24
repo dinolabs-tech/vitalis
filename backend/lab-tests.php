@@ -134,7 +134,7 @@ if ($res) {
 
 // ✅ Fetch doctors for dropdown
 $doctors = [];
-$res = $conn->query("SELECT d.id, l.staffname FROM doctors d JOIN login l ON d.staff_id = l.id ORDER BY l.staffname ASC");
+$res = $conn->query("SELECT * FROM login WHERE role='doctor' ORDER BY staffname ASC");
 if ($res) {
   while ($row = $res->fetch_assoc()) {
     $doctors[] = $row;

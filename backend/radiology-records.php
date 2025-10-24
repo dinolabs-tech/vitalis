@@ -47,8 +47,7 @@ $radiology_records = [];
 $sql = "SELECT rr.*, p.first_name, p.last_name, l.staffname AS doctor_name, b.branch_name
         FROM radiology_records rr
         LEFT JOIN patients p ON rr.patient_id = p.id
-        LEFT JOIN doctors d ON rr.doctor_id = d.staff_id
-        LEFT JOIN login l ON d.staff_id = l.id
+        LEFT JOIN login l ON rr.doctor_id = l.id
         LEFT JOIN branches b ON rr.branch_id = b.branch_id
         ORDER BY rr.test_date DESC";
 $result = $conn->query($sql);
