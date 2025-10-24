@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center">
             <a href="index.php" class="logo">
         <img
-          src="assets/img/dark-medipulse.jpg"
+          src="assets/img/logo.png"
           alt="navbar brand"
           class="navbar-brand"
           height="37" />
