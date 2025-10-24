@@ -56,12 +56,11 @@ if (isset($_POST['id'])) {
 
 // Fetch all IPD admissions
 $ipd_admissions = [];
-$sql = "SELECT ia.*, p.first_name, p.last_name, r.room_number, d.staffname as doctor_name, b.branch_name
+$sql = "SELECT ia.*, p.first_name, p.last_name, r.room_number, l.staffname as doctor_name, b.branch_name
         FROM ipd_admissions ia
         LEFT JOIN patients p ON ia.patient_id = p.patient_id
         LEFT JOIN rooms r ON ia.room_id = r.id
-        LEFT JOIN login doc ON ia.doctor_id = doc.id
-        LEFT JOIN login d ON doc.staff_id = d.id
+        LEFT JOIN login l ON ia.doctor_id = l.id
         LEFT JOIN branches b ON ia.branch_id = b.branch_id
         ORDER BY ia.admission_date DESC";
 $result = $conn->query($sql);
