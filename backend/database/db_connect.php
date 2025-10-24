@@ -10,7 +10,6 @@ if ($conn->connect_error) {
 }
 
 
-
 // $servername = "localhost";
 // $username = "root";
 // $password = "";

@@ -137,7 +137,7 @@ $tables = [
                 `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
     [
         'name' => 'payments',
@@ -209,7 +209,7 @@ $tables = [
                 `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
     [
         'name' => 'order_items',
@@ -221,7 +221,7 @@ $tables = [
                 `service_id` INT NULL,
                 `quantity` INT NOT NULL DEFAULT 1,
                 `price` DECIMAL(10, 2) NOT NULL
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
     [
         'name' => 'settings',
@@ -230,7 +230,7 @@ $tables = [
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
                 `setting_key` VARCHAR(255) NOT NULL UNIQUE,
                 `setting_value` VARCHAR(255) NOT NULL
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
     [
         'name' => 'medical_records',
@@ -450,7 +450,7 @@ $tables = [
                 `actionDate` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `ipAddress` VARCHAR(45) NOT NULL,
                 `details` TEXT NULL
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
     [
         'name' => 'stock_transfers',
@@ -463,7 +463,7 @@ $tables = [
                 `quantity` INT NOT NULL,
                 `transfer_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `notes` TEXT
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
     [
         'name' => 'session_logs',
@@ -475,7 +475,7 @@ $tables = [
             ip_address VARCHAR(45) NOT NULL,
             user_agent TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
     [
         'name' => 'branch_product_inventory',
