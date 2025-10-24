@@ -90,7 +90,7 @@ if ($result_rooms) {
 
 // Fetch doctors for dropdown (only if needed for display)
 $doctors = [];
-$result_doctors = $conn->query("SELECT d.id, l.staffname FROM doctors d JOIN login l ON d.staff_id = l.id ORDER BY l.staffname ASC");
+$result_doctors = $conn->query("SELECT * FROM login WHERE role='doctor' ORDER BY staffname ASC");
 if ($result_doctors) {
   while ($row = $result_doctors->fetch_assoc()) {
     $doctors[] = $row;
