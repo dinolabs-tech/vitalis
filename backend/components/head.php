@@ -7,7 +7,7 @@
     />
     <link
       rel="icon"
-      href="assets/img/kaiadmin/favicon.ico"
+      href="assets/img/favicon.ico"
       type="image/x-icon"
     />
 
