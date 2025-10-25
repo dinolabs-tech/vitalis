@@ -239,58 +239,252 @@
             <div class="quick-actions-scroll scrollbar-outer">
               <div class="quick-actions-items">
                 <div class="row m-0">
-                  <a class="col-6 col-md-4 p-0" href="#">
-                    <div class="quick-actions-item">
-                      <div class="avatar-item bg-danger rounded-circle">
-                        <i class="far fa-calendar-alt"></i>
+                  <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                    <a class="col-6 col-md-4 p-0" href="add-doctor.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-danger rounded-circle">
+                          <i class="fas fa-user-md"></i>
+                        </div>
+                        <span class="text">Add Doctor</span>
                       </div>
-                      <span class="text">Calendar</span>
-                    </div>
-                  </a>
-                  <a class="col-6 col-md-4 p-0" href="#">
-                    <div class="quick-actions-item">
-                      <div
-                        class="avatar-item bg-warning rounded-circle">
-                        <i class="fas fa-map"></i>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-employee.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-warning rounded-circle">
+                          <i class="fas fa-user-plus"></i>
+                        </div>
+                        <span class="text">Add Employee</span>
                       </div>
-                      <span class="text">Maps</span>
-                    </div>
-                  </a>
-                  <a class="col-6 col-md-4 p-0" href="#">
-                    <div class="quick-actions-item">
-                      <div class="avatar-item bg-info rounded-circle">
-                        <i class="fas fa-file-excel"></i>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-department.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-info rounded-circle">
+                          <i class="fas fa-hospital"></i>
+                        </div>
+                        <span class="text">Add Department</span>
                       </div>
-                      <span class="text">Reports</span>
-                    </div>
-                  </a>
-                  <a class="col-6 col-md-4 p-0" href="#">
-                    <div class="quick-actions-item">
-                      <div
-                        class="avatar-item bg-success rounded-circle">
-                        <i class="fas fa-envelope"></i>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-room.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-success rounded-circle">
+                          <i class="fas fa-bed"></i>
+                        </div>
+                        <span class="text">Add Room</span>
                       </div>
-                      <span class="text">Emails</span>
-                    </div>
-                  </a>
-                  <a class="col-6 col-md-4 p-0" href="#">
-                    <div class="quick-actions-item">
-                      <div
-                        class="avatar-item bg-primary rounded-circle">
-                        <i class="fas fa-file-invoice-dollar"></i>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-patient.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-primary rounded-circle">
+                          <i class="fas fa-wheelchair"></i>
+                        </div>
+                        <span class="text">Add Patient</span>
                       </div>
-                      <span class="text">Invoice</span>
-                    </div>
-                  </a>
-                  <a class="col-6 col-md-4 p-0" href="#">
-                    <div class="quick-actions-item">
-                      <div
-                        class="avatar-item bg-secondary rounded-circle">
-                        <i class="fas fa-credit-card"></i>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-invoice.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-secondary rounded-circle">
+                          <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <span class="text">Add Invoice</span>
                       </div>
-                      <span class="text">Payments</span>
-                    </div>
-                  </a>
+                    </a>
+                  <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'pharmacist'): ?>
+                    <a class="col-6 col-md-4 p-0" href="add-product.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-danger rounded-circle">
+                          <i class="fas fa-box"></i>
+                        </div>
+                        <span class="text">Add Product</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-medication.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-warning rounded-circle">
+                          <i class="fas fa-pills"></i>
+                        </div>
+                        <span class="text">Add Medication</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-stock-transfer.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-info rounded-circle">
+                          <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <span class="text">Add Stock Transfer</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-prescription.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-success rounded-circle">
+                          <i class="fas fa-prescription"></i>
+                        </div>
+                        <span class="text">Add Prescription</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-drug-consultation.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-primary rounded-circle">
+                          <i class="fas fa-comment-medical"></i>
+                        </div>
+                        <span class="text">Add Drug Consultation</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="pharmacy.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-secondary rounded-circle">
+                          <i class="fas fa-prescription-bottle-alt"></i>
+                        </div>
+                        <span class="text">View Pharmacy</span>
+                      </div>
+                    </a>
+                  <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'receptionist'): ?>
+                    <a class="col-6 col-md-4 p-0" href="add-patient.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-danger rounded-circle">
+                          <i class="fas fa-wheelchair"></i>
+                        </div>
+                        <span class="text">Add Patient</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-appointment.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-warning rounded-circle">
+                          <i class="fas fa-calendar-plus"></i>
+                        </div>
+                        <span class="text">Add Appointment</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-opd-visit.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-info rounded-circle">
+                          <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <span class="text">Add OPD Visit</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-patient-bill.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-success rounded-circle">
+                          <i class="fas fa-money-bill-alt"></i>
+                        </div>
+                        <span class="text">Add Patient Bill</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="patients.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-primary rounded-circle">
+                          <i class="fas fa-users"></i>
+                        </div>
+                        <span class="text">View Patients</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="appointments.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-secondary rounded-circle">
+                          <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <span class="text">View Appointments</span>
+                      </div>
+                    </a>
+                  <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'nurse'): ?>
+                    <a class="col-6 col-md-4 p-0" href="add-patient-vital.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-danger rounded-circle">
+                          <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <span class="text">Add Patient Vital</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-drug-administration.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-warning rounded-circle">
+                          <i class="fas fa-syringe"></i>
+                        </div>
+                        <span class="text">Add Drug Admin.</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-ipd-admission.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-info rounded-circle">
+                          <i class="fas fa-hospital-user"></i>
+                        </div>
+                        <span class="text">Add IPD Admission</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-medical-record.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-success rounded-circle">
+                          <i class="fas fa-file-medical"></i>
+                        </div>
+                        <span class="text">Add Medical Record</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-doctor-note.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-primary rounded-circle">
+                          <i class="fas fa-notes-medical"></i>
+                        </div>
+                        <span class="text">Add Doctor Note</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-icu-monitoring.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-secondary rounded-circle">
+                          <i class="fas fa-monitor-heart-rate"></i>
+                        </div>
+                        <span class="text">Add ICU Monitoring</span>
+                      </div>
+                    </a>
+                  <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'doctor'): ?>
+                    <a class="col-6 col-md-4 p-0" href="add-patient.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-danger rounded-circle">
+                          <i class="fas fa-wheelchair"></i>
+                        </div>
+                        <span class="text">Add Patient</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-appointment.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-warning rounded-circle">
+                          <i class="fas fa-calendar-plus"></i>
+                        </div>
+                        <span class="text">Add Appointment</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-opd-visit.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-info rounded-circle">
+                          <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <span class="text">Add OPD Visit</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-prescription.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-success rounded-circle">
+                          <i class="fas fa-prescription"></i>
+                        </div>
+                        <span class="text">Add Prescription</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-doctor-note.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-primary rounded-circle">
+                          <i class="fas fa-notes-medical"></i>
+                        </div>
+                        <span class="text">Add Doctor Note</span>
+                      </div>
+                    </a>
+                    <a class="col-6 col-md-4 p-0" href="add-lab-test.php">
+                      <div class="quick-actions-item">
+                        <div class="avatar-item bg-secondary rounded-circle">
+                          <i class="fas fa-flask"></i>
+                        </div>
+                        <span class="text">Add Lab Test</span>
+                      </div>
+                    </a>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>
