@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-include_once('database/database_schema.php'); // Include database connection
+// include_once('database/database_schema.php'); // Include database connection
 include_once('database/db_connect.php'); // Include database connection
 
 // Check if admin account exists, if not, create it
@@ -24,6 +24,7 @@ if ($result->num_rows === 0) {
     $insert_stmt->execute();
     $insert_stmt->close();
 }
+
 $stmt->close();
 
 session_start();
