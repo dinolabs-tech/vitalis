@@ -868,58 +868,5 @@ foreach ($tables as $table) {
 // Create default admin user
 insertAdminUser($conn, 'dinolabs', 'dinolabs', 'admin@dinolabs.com', 'admin', 'N/A', 'N/A', NULL);
 
-// Add foreign key constraints
-$foreign_keys = [
-    "ALTER TABLE `login` ADD CONSTRAINT `fk_login_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `departments` ADD CONSTRAINT `fk_departments_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `patients` ADD CONSTRAINT `fk_patients_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `payments` ADD CONSTRAINT `fk_payments_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `payroll` ADD CONSTRAINT `fk_payroll_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `products` ADD CONSTRAINT `fk_products_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `medical_records` ADD CONSTRAINT `fk_medical_records_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `appointments` ADD CONSTRAINT `fk_appointments_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `rooms` ADD CONSTRAINT `fk_rooms_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `admissions` ADD CONSTRAINT `fk_admissions_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `opd_visits` ADD CONSTRAINT `fk_opd_visits_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `ipd_admissions` ADD CONSTRAINT `fk_ipd_admissions_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `lab_tests` ADD CONSTRAINT `fk_lab_tests_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `services` ADD CONSTRAINT `fk_services_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `invoices` ADD CONSTRAINT `fk_invoices_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `medications` ADD CONSTRAINT `fk_medications_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `expenses` ADD CONSTRAINT `fk_expenses_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `audit_logs` ADD CONSTRAINT `fk_audit_logs_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `session_logs` ADD CONSTRAINT `fk_session_logs_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `branch_product_inventory` ADD CONSTRAINT `fk_branch_product_inventory_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE CASCADE ON UPDATE CASCADE;",
-    "ALTER TABLE `vaccinations` ADD CONSTRAINT `fk_vaccinations_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `test_samples` ADD CONSTRAINT `fk_test_samples_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `staff_attendance` ADD CONSTRAINT `fk_staff_attendance_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `radiology_records` ADD CONSTRAINT `fk_radiology_records_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `operations` ADD CONSTRAINT `fk_operations_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `er_visits` ADD CONSTRAINT `fk_er_visits_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `doctor_notes` ADD CONSTRAINT `fk_doctor_notes_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `prescriptions` ADD CONSTRAINT `fk_prescriptions_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `patient_vitals` ADD CONSTRAINT `fk_patient_vitals_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `patient_bills` ADD CONSTRAINT `fk_patient_bills_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `drug_consultations` ADD CONSTRAINT `fk_drug_consultations_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `balance_sheets` ADD CONSTRAINT `fk_balance_sheets_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `schedules` ADD CONSTRAINT `fk_schedules_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `holidays` ADD CONSTRAINT `fk_holidays_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `doctor_schedules` ADD CONSTRAINT `fk_doctor_schedules_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `leaves` ADD CONSTRAINT `fk_leaves_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `provident_fund` ADD CONSTRAINT `fk_provident_fund_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `salary` ADD CONSTRAINT `fk_salary_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
-    "ALTER TABLE `taxes` ADD CONSTRAINT `fk_taxes_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;"
-];
-
-foreach ($foreign_keys as $sql) {
-    if ($conn->query($sql) === TRUE) {
-        // echo "Foreign key added successfully or already exists.<br>";
-    } else {
-        // echo "Error adding foreign key: " . $conn->error . "<br>";
-        error_log("Error adding foreign key: " . $conn->error);
-    }
-}
-
 // Close the connection
 $conn = null;
