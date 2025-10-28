@@ -48,8 +48,7 @@ $filter_branch_id = $_GET['branch_id'] ?? '';
 $sql = "SELECT o.*, p.first_name, p.last_name, d.staffname as doctor_name, r.room_number, b.branch_name
         FROM operations o
         LEFT JOIN patients p ON o.patient_id = p.patient_id
-        LEFT JOIN doctors doc ON o.doctor_id = doc.id
-        LEFT JOIN login d ON doc.staff_id = d.id
+        LEFT JOIN login d ON o.doctor_id = d.id
         LEFT JOIN rooms r ON o.room_id = r.id
         LEFT JOIN branches b ON o.branch_id = b.branch_id
         WHERE 1=1";
