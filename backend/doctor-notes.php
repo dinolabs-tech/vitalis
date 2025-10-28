@@ -65,26 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id']) && !isset($_POS
 
 // Fetch all doctor notes
 $doctor_notes = [];
-$filter_branch_id = $_GET['branch_id'] ?? '';
-
-$sql = "SELECT dn.note_id, dn.patient_id, dn.doctor_id, dn.note_title, dn.note_content, dn.created_at, p.first_name, p.last_name, l.staffname as doctor_name, b.branch_name
+$sql = "SELECT dn.note_id, dn.patient_id, dn.doctor_id, dn.note_title, dn.note_content, dn.created_at, p.first_name, p.last_name, l.staffname as doctor_name
         FROM doctor_notes dn
         LEFT JOIN patients p ON dn.patient_id = p.id
         LEFT JOIN login l ON dn.doctor_id = l.id
-        LEFT JOIN branches b ON p.branch_id = b.branch_id
-        WHERE 1=1";
-
-if (!empty($filter_branch_id)) {
-    $sql .= " AND p.branch_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $filter_branch_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-} else {
-    $sql .= " ORDER BY dn.created_at DESC";
-    $result = $conn->query($sql);
-}
-
+        ORDER BY dn.created_at DESC";
+$result = $conn->query($sql);
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $doctor_notes[] = $row;
@@ -156,41 +142,6 @@ if ($result_doctors) {
             </ul>
           </div>
 
-          <form method="GET" action="">
-            <div class="row">
-              <div class="col-md-3">
-                <div class="form-group">
-                  <label for="branch_id">Branch</label>
-                  <select class="form-control" id="branch_id" name="branch_id">
-                    <option value="">All Branches</option>
-                    <?php
-                    // Fetch branches for dropdown
-                    $branches = [];
-                    $result_branches = $conn->query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name ASC");
-                    if ($result_branches) {
-                      while ($row = $result_branches->fetch_assoc()) {
-                        $branches[] = $row;
-                      }
-                    }
-                    $filter_branch_id = $_GET['branch_id'] ?? '';
-                    foreach ($branches as $branch): ?>
-                      <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo ($filter_branch_id == $branch['branch_id']) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($branch['branch_name']); ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="form-group">
-                  <label>&nbsp;</label><br>
-                  <button type="submit" class="btn btn-primary">Filter</button>
-                  <a href="doctor-notes.php" class="btn btn-secondary">Reset</a>
-                </div>
-              </div>
-            </div>
-          </form>
-
           <div
             class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
             <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'doctor'): ?>
@@ -231,7 +182,6 @@ if ($result_doctors) {
                         <th>Note Title</th>
                         <th>Note Content</th>
                         <th>Created At</th>
-                        <th>Branch</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>
@@ -244,7 +194,6 @@ if ($result_doctors) {
                             <td><?php echo htmlspecialchars($note['note_title']); ?></td>
                             <td><?php echo htmlspecialchars(substr($note['note_content'], 0, 100)) . (strlen($note['note_content']) > 100 ? '...' : ''); ?></td>
                             <td><?php echo htmlspecialchars($note['created_at']); ?></td>
-                            <td></td>
                             <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'doctor'): ?>
                               <td class="text-right d-flex">
                                 <a href="edit-doctor-note.php?id=<?php echo $note['note_id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
@@ -255,7 +204,7 @@ if ($result_doctors) {
                         <?php endforeach; ?>
                       <?php else: ?>
                         <tr>
-                          <td colspan="7" class="text-center">No doctor notes found.</td>
+                          <td colspan="6" class="text-center">No doctor notes found.</td>
                         </tr>
                       <?php endif; ?>
                     </tbody>
