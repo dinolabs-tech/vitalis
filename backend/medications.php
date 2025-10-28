@@ -2,6 +2,15 @@
 session_start();
 include_once('database/db_connect.php');
 
+// Fetch branches for dropdown
+$branches = [];
+$result_branches = $conn->query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name ASC");
+if ($result_branches) {
+  while ($row = $result_branches->fetch_assoc()) {
+    $branches[] = $row;
+  }
+}
+
 if (!isset($_SESSION['loggedin']) || $_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'pharmacist' && $_SESSION['role'] !== 'doctor') {
   header("Location: login.php");
   exit;
@@ -78,12 +87,42 @@ if (isset($_POST['id'])) {
 
 // Fetch all medications
 $medications = [];
-$sql = "SELECT m.*, p.name as product_name FROM medications m JOIN products p ON m.product_id = p.id ORDER BY p.name ASC";
-$result = $conn->query($sql);
-if ($result) {
-  while ($row = $result->fetch_assoc()) {
-    $medications[] = $row;
-  }
+$sql = "SELECT m.*, p.name as product_name, b.branch_name
+        FROM medications m
+        JOIN products p ON m.product_id = p.id
+        LEFT JOIN branches b ON p.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+if (isset($_GET['branch_id']) && $_GET['branch_id'] !== '') {
+    $conditions[] = "p.branch_id = ?";
+    $params[] = $_GET['branch_id'];
+    $types .= "i";
+}
+
+if (count($conditions) > 0) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY p.name ASC";
+
+$stmt = $conn->prepare($sql);
+if ($stmt) {
+    if (count($params) > 0) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $medications[] = $row;
+        }
+    }
+    $stmt->close();
+} else {
+    $error_message = "Failed to prepare statement: " . $conn->error;
 }
 
 // Fetch medication data for editing if ID is provided in GET
@@ -143,13 +182,23 @@ if ($result_products) {
             </ul>
           </div>
 
-          <div
-            class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
-            <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'pharmacist'): ?>
-              <div class="ms-md-auto py-2 py-md-0">
+          <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+            <div class="ms-md-auto py-2 py-md-0 d-flex align-items-center">
+              <form method="GET" action="medications.php" class="form-inline me-3">
+                <label for="branch_filter" class="form-label me-2">Filter by Branch:</label>
+                <select class="form-control" id="branch_filter" name="branch_id" onchange="this.form.submit()">
+                  <option value="">All Branches</option>
+                  <?php foreach ($branches as $branch): ?>
+                    <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo (isset($_GET['branch_id']) && $_GET['branch_id'] == $branch['branch_id']) ? 'selected' : ''; ?>>
+                      <?php echo htmlspecialchars($branch['branch_name']); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </form>
+              <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'pharmacist'): ?>
                 <a href="add-medication.php" class="btn btn-primary btn-round">Add Medications</a>
-              </div>
-            <?php endif; ?>
+              <?php endif; ?>
+            </div>
           </div>
 
           <?php if ($error_message): ?>
@@ -185,6 +234,7 @@ if ($result_products) {
                           <th>Expiry Date</th>
                           <th>Storage Conditions</th>
                           <th>Created At</th>
+                          <th>Branch</th>
                           <th class="text-right">Action</th>
                         </tr>
                       </thead>
@@ -199,6 +249,7 @@ if ($result_products) {
                               <td><?php echo htmlspecialchars($medication['expiry_date']); ?></td>
                               <td><?php echo htmlspecialchars($medication['storage_conditions']); ?></td>
                               <td><?php echo htmlspecialchars($medication['created_at']); ?></td>
+                              <td><?php echo htmlspecialchars($medication['branch_name'] ?? 'N/A'); ?></td>
                               <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'pharmacist'): ?>
                                 <td class="text-right d-flex">
                                     <a href="edit-medication.php?id=<?php echo $medication['id']; ?>" class="btn-icon btn-round btn-primary text-white mx-2"><i class="fas fa-edit"></i></a>
@@ -209,7 +260,7 @@ if ($result_products) {
                           <?php endforeach; ?>
                         <?php else: ?>
                           <tr>
-                            <td colspan="8" class="text-center">No medications found.</td>
+                            <td colspan="9" class="text-center">No medications found.</td>
                           </tr>
                         <?php endif; ?>
                       </tbody>

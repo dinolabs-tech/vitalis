@@ -39,9 +39,33 @@ if (isset($_POST['id'])) {
 }
 
 // Fetch rooms data
-$sql = "SELECT r.*, b.branch_name FROM rooms r LEFT JOIN branches b ON r.branch_id = b.branch_id";
-$result = $conn->query($sql);
 $rooms = [];
+$sql = "SELECT r.*, b.branch_name 
+        FROM rooms r 
+        LEFT JOIN branches b ON r.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+// Filter by branch_id if the user is not an admin
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $conditions[] = "r.branch_id = ?";
+    $params[] = $_SESSION['branch_id'];
+    $types .= "i";
+}
+
+if (!empty($conditions)) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+
 if ($result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
     $rooms[] = $row;

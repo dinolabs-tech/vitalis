@@ -85,20 +85,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch all stock transfers
 $stock_transfers = [];
-$sql = "SELECT st.*, 
-               fb.branch_name AS from_branch_name, 
-               tb.branch_name AS to_branch_name, 
-               p.name AS product_name 
+$sql = "SELECT st.*,
+               fb.branch_name AS from_branch_name,
+               tb.branch_name AS to_branch_name,
+               p.name AS product_name
         FROM stock_transfers st
         LEFT JOIN branches fb ON st.from_branch_id = fb.branch_id
         LEFT JOIN branches tb ON st.to_branch_id = tb.branch_id
-        LEFT JOIN products p ON st.product_id = p.id
-        ORDER BY st.transfer_date DESC";
-$result = $conn->query($sql);
-if ($result) {
-  while ($row = $result->fetch_assoc()) {
-    $stock_transfers[] = $row;
-  }
+        LEFT JOIN products p ON st.product_id = p.id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+if (isset($_GET['branch_id']) && $_GET['branch_id'] !== '') {
+    // Assuming the filter applies to either from_branch_id or to_branch_id for display purposes
+    // For stock transfers, it might be more appropriate to filter by either, or both.
+    // For simplicity, let's filter by from_branch_id for now, or consider adding a more complex filter.
+    // Given the task is to filter by branch_id and display branch name, we'll filter by from_branch_id.
+    $conditions[] = "st.from_branch_id = ? OR st.to_branch_id = ?";
+    $params[] = $_GET['branch_id'];
+    $params[] = $_GET['branch_id'];
+    $types .= "ii";
+}
+
+if (count($conditions) > 0) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY st.transfer_date DESC";
+
+$stmt = $conn->prepare($sql);
+if ($stmt) {
+    if (count($params) > 0) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $stock_transfers[] = $row;
+        }
+    }
+    $stmt->close();
+} else {
+    $error_message = "Failed to prepare statement: " . $conn->error;
 }
 
 // Fetch branches for dropdowns
@@ -151,13 +182,23 @@ if ($result_products) {
             </ul>
           </div>
 
-          <div
-            class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
-            <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'pharmacist'): ?>
-              <div class="ms-md-auto py-2 py-md-0">
+          <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+            <div class="ms-md-auto py-2 py-md-0 d-flex align-items-center">
+              <form method="GET" action="stock-transfers.php" class="form-inline me-3">
+                <label for="branch_filter" class="form-label me-2">Filter by Branch:</label>
+                <select class="form-control" id="branch_filter" name="branch_id" onchange="this.form.submit()">
+                  <option value="">All Branches</option>
+                  <?php foreach ($branches as $branch): ?>
+                    <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo (isset($_GET['branch_id']) && $_GET['branch_id'] == $branch['branch_id']) ? 'selected' : ''; ?>>
+                      <?php echo htmlspecialchars($branch['branch_name']); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </form>
+              <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'pharmacist'): ?>
                 <a href="add-stock-transfer.php" class="btn btn-primary btn-round">Add Stock Transfer</a>
-              </div>
-            <?php endif; ?>
+              <?php endif; ?>
+            </div>
           </div>
 
           <?php if ($error_message): ?>

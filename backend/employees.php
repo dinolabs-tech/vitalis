@@ -8,8 +8,25 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['role'] !== 'admin') {
 }
 
 $employees = [];
-$sql = "SELECT id, staffname, email, mobile, role, status FROM login ORDER BY staffname";
-$result = $conn->query($sql);
+$sql = "SELECT l.id, l.staffname, l.email, l.mobile, l.role, l.status, b.branch_name 
+        FROM login l
+        LEFT JOIN branches b ON l.branch_id = b.branch_id
+        ORDER BY l.staffname";
+
+// Filter by branch_id if the user is not an admin
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $sql = "SELECT l.id, l.staffname, l.email, l.mobile, l.role, l.status, b.branch_name 
+            FROM login l
+            LEFT JOIN branches b ON l.branch_id = b.branch_id
+            WHERE l.branch_id = ? ORDER BY l.staffname";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $_SESSION['branch_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+} else {
+    $result = $conn->query($sql);
+}
 
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
@@ -96,19 +113,20 @@ if (isset($_POST['id'])) {
                 <div class="table-responsive">
                   <table class="table table-striped custom-table" id="basic-datatables">
                     <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Employee ID</th>
-                        <th>Email</th>
-                        <th>Mobile</th>
-                        <th>Role</th>
+                        <tr>
+                          <th>Name</th>
+                          <th>Employee ID</th>
+                          <th>Email</th>
+                          <th>Mobile</th>
+                          <th>Role</th>
+                          <th>Branch</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php if (empty($employees)): ?>
                         <tr>
-                          <td colspan="6" class="text-center">No employees found.</td>
+                          <td colspan="7" class="text-center">No employees found.</td>
                         </tr>
                       <?php else: ?>
                         <?php foreach ($employees as $employee): ?>
@@ -125,6 +143,7 @@ if (isset($_POST['id'])) {
                             <td>
                               <span class="custom-badge status-green"><?php echo htmlspecialchars(ucfirst($employee['role'])); ?></span>
                             </td>
+                            <td><?php echo htmlspecialchars($employee['branch_name'] ?? 'N/A'); ?></td>
                             <td class="text-right d-flex">
                               <a href="edit-employee.php?id=<?php echo $employee['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
                               <a href="#" data-id="<?php echo $employee['id']; ?>" class="btn-icon btn-danger btn-round text-white btn-delete-employee ms-2"><i class="fas fa-trash"></i></a>

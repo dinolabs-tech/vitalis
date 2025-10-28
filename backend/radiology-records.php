@@ -44,13 +44,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 
 // Fetch all radiology records
 $radiology_records = [];
+$filter_branch_id = $_GET['branch_id'] ?? '';
+
 $sql = "SELECT rr.*, p.first_name, p.last_name, l.staffname AS doctor_name, b.branch_name
         FROM radiology_records rr
         LEFT JOIN patients p ON rr.patient_id = p.id
         LEFT JOIN login l ON rr.doctor_id = l.id
         LEFT JOIN branches b ON rr.branch_id = b.branch_id
-        ORDER BY rr.test_date DESC";
-$result = $conn->query($sql);
+        WHERE 1=1";
+
+if (!empty($filter_branch_id)) {
+  $sql .= " AND rr.branch_id = ?";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param("i", $filter_branch_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+} else {
+  $sql .= " ORDER BY rr.test_date DESC";
+  $result = $conn->query($sql);
+}
+
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $radiology_records[] = $row;
@@ -88,6 +101,41 @@ if ($result) {
               </li>
             </ul>
           </div>
+
+          <form method="GET" action="">
+            <div class="row">
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="branch_id">Branch</label>
+                  <select class="form-control" id="branch_id" name="branch_id">
+                    <option value="">All Branches</option>
+                    <?php
+                    // Fetch branches for dropdown
+                    $branches = [];
+                    $result_branches = $conn->query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name ASC");
+                    if ($result_branches) {
+                      while ($row = $result_branches->fetch_assoc()) {
+                        $branches[] = $row;
+                      }
+                    }
+                    $filter_branch_id = $_GET['branch_id'] ?? '';
+                    foreach ($branches as $branch): ?>
+                      <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo ($filter_branch_id == $branch['branch_id']) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($branch['branch_name']); ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>&nbsp;</label><br>
+                  <button type="submit" class="btn btn-primary">Filter</button>
+                  <a href="radiology-records.php" class="btn btn-secondary">Reset</a>
+                </div>
+              </div>
+            </div>
+          </form>
 
           <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
             <?php if ($_SESSION['role'] === 'admin'): ?>

@@ -16,14 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $address = $_POST['address'] ?? '';
   $phone = $_POST['phone'] ?? '';
   $email = $_POST['email'] ?? '';
+  $state = $_POST['state'] ?? '';
+  $country = $_POST['country'] ?? '';
 
   // Basic validation
-  if (empty($branch_name) || empty($address) || empty($phone) || empty($email)) {
+  if (empty($branch_name) || empty($address) || empty($phone) || empty($email) || empty($state) || empty($country)) {
     $error_message = "Please fill in all required fields.";
   } else {
     // Insert into branches table
-    $stmt = $conn->prepare("INSERT INTO branches (branch_name, address, phone, email) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $branch_name, $address, $phone, $email);
+    $stmt = $conn->prepare("INSERT INTO branches (branch_name, address, phone, email, state, country) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $branch_name, $address, $phone, $email, $state, $country);
 
     if ($stmt->execute()) {
       $success_message = "Branch added successfully!";
@@ -121,6 +123,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-sm-6">
                       <div class="form-group">
                         <input class="form-control" type="email" placeholder="Email" style="border:1px solid red;" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <input class="form-control" type="text" name="state" style="border:1px solid red;" placeholder="State" value="<?php echo htmlspecialchars($_POST['state'] ?? ''); ?>">
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <input class="form-control" type="text" name="country" style="border:1px solid red;" placeholder="Country" value="<?php echo htmlspecialchars($_POST['country'] ?? ''); ?>">
                       </div>
                     </div>
                     <div class="col-sm-12 mt-3 text-center">

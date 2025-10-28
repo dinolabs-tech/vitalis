@@ -91,13 +91,35 @@ if (isset($_POST['id'])) {
                           <th>Employee Share</th>
                           <th>Organization Share</th>
                           <th>Description</th>
+                          <th>Branch</th>
                           <th class="text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <?php
-                        $ret = "SELECT pf.*, l.staffname FROM provident_fund pf JOIN login l ON pf.employeeId = l.id";
-                        $stmt = $conn->prepare($ret);
+                        $sql = "SELECT pf.*, l.staffname, b.branch_name 
+                                FROM provident_fund pf 
+                                JOIN login l ON pf.employeeId = l.id
+                                LEFT JOIN branches b ON pf.branch_id = b.branch_id";
+                        
+                        $conditions = [];
+                        $params = [];
+                        $types = "";
+
+                        if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+                            $conditions[] = "pf.branch_id = ?";
+                            $params[] = $_SESSION['branch_id'];
+                            $types .= "i";
+                        }
+
+                        if (!empty($conditions)) {
+                            $sql .= " WHERE " . implode(" AND ", $conditions);
+                        }
+
+                        $stmt = $conn->prepare($sql);
+                        if (!empty($params)) {
+                            $stmt->bind_param($types, ...$params);
+                        }
                         $stmt->execute();
                         $res = $stmt->get_result();
                         while ($row = $res->fetch_object()) {
@@ -108,6 +130,7 @@ if (isset($_POST['id'])) {
                             <td>$<?php echo $row->employeeShare; ?></td>
                             <td>$<?php echo $row->organizationShare; ?></td>
                             <td><?php echo $row->description; ?></td>
+                            <td><?php echo htmlspecialchars($row->branch_name ?? 'N/A'); ?></td>
                             <td class="text-right d-flex">
                                 <a href="edit-provident-fund.php?id=<?php echo $row->id; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
                                 <a href="#" data-id="<?php echo $row->id; ?>" data-employee-name="<?php echo htmlspecialchars($row->staffname); ?>" class="btn-icon btn-danger btn-round text-white btn-delete-provident"><i class="fas fa-trash"></i></a>

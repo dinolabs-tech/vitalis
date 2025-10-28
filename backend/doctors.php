@@ -11,8 +11,22 @@ if (!isset($_SESSION['loggedin']) || ($_SESSION['role'] !== 'admin' && $_SESSION
 $success_message = '';
 $error_message = '';
 $doctors = [];
-$sql = "SELECT * FROM login l WHERE l.role = 'doctor'";
-$result = $conn->query($sql);
+$sql = "SELECT l.*, b.branch_name 
+        FROM login l 
+        LEFT JOIN branches b ON l.branch_id = b.branch_id 
+        WHERE l.role = 'doctor'";
+
+// Filter by branch_id if the user is not an admin
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $sql .= " AND l.branch_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $_SESSION['branch_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+} else {
+    $result = $conn->query($sql);
+}
 
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
@@ -97,6 +111,7 @@ if (isset($_POST['id'])) {
                   <h5><?php echo htmlspecialchars($doctor['staffname'])?></h5>
                   <h6><?php echo htmlspecialchars($doctor['specialization'])?></h6>
                   <h6><?php echo htmlspecialchars($doctor['mobile'])?></h6>
+                  <h6><?php echo htmlspecialchars($doctor['branch_name'] ?? 'N/A')?></h6>
                 </div>
               </div>
             </div>

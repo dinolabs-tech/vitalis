@@ -13,9 +13,22 @@ $error_message = '';
 
 // Fetch patients
 $patients = [];
-$sql = "SELECT patient_id, first_name, last_name, date_of_birth, gender, email, phone, address, country, state 
-        FROM patients";
-$result = $conn->query($sql);
+$patients = [];
+$sql = "SELECT p.patient_id, p.first_name, p.last_name, p.date_of_birth, p.gender, p.email, p.phone, p.address, p.country, p.state, b.branch_name 
+        FROM patients p
+        LEFT JOIN branches b ON p.branch_id = b.branch_id";
+
+// Filter by branch_id if the user is not an admin
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $sql .= " WHERE p.branch_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $_SESSION['branch_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+} else {
+    $result = $conn->query($sql);
+}
 
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
@@ -119,6 +132,7 @@ if (isset($_POST['id'])) {
                           <th>Address</th>
                           <th>Phone</th>
                           <th>Email</th>
+                          <th>Branch</th>
                           <?php if (in_array($_SESSION['role'], ['admin', 'receptionist'])): ?>
                             <th class="text-right">Action</th>
                           <?php endif; ?>
@@ -138,6 +152,7 @@ if (isset($_POST['id'])) {
                               <td><?= htmlspecialchars($patient['address'] . ', ' . $patient['state'] . ', ' . $patient['country']); ?></td>
                               <td><?= htmlspecialchars($patient['phone']); ?></td>
                               <td><?= htmlspecialchars($patient['email']); ?></td>
+                              <td><?= htmlspecialchars($patient['branch_name'] ?? 'N/A'); ?></td>
 
                               <?php if (in_array($_SESSION['role'], ['admin', 'receptionist'])): ?>
                                 <td class="text-right d-flex">

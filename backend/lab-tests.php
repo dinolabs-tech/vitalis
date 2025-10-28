@@ -6,6 +6,15 @@ error_reporting(E_ALL);
 session_start();
 include_once('database/db_connect.php');
 
+// Fetch branches for dropdown
+$branches = [];
+$result_branches = $conn->query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name ASC");
+if ($result_branches) {
+  while ($row = $result_branches->fetch_assoc()) {
+    $branches[] = $row;
+  }
+}
+
 // ✅ Role & session check
 if (
   !isset($_SESSION['loggedin']) ||
@@ -100,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_lab_test_id']
 
 // ✅ Fetch all lab tests
 $lab_tests = [];
-$sql = "SELECT 
+$sql = "SELECT
           lt.id AS test_id,
           lt.test_name,
           lt.status,
@@ -109,18 +118,45 @@ $sql = "SELECT
           p.first_name,
           p.last_name,
           l.staffname AS doctor_name,
-          pb.staffname AS performed_by
+          pb.staffname AS performed_by,
+          b.branch_name
         FROM lab_tests lt
         LEFT JOIN patients p ON lt.patient_id = p.id
         LEFT JOIN login l ON lt.doctor_id = l.id
         LEFT JOIN login pb ON lt.performed_by_staff_id = pb.id
-        ORDER BY lt.test_date DESC";
+        LEFT JOIN branches b ON lt.branch_id = b.branch_id";
 
-$result = $conn->query($sql);
-if ($result) {
-  while ($row = $result->fetch_assoc()) {
-    $lab_tests[] = $row;
-  }
+$conditions = [];
+$params = [];
+$types = "";
+
+if (isset($_GET['branch_id']) && $_GET['branch_id'] !== '') {
+    $conditions[] = "lt.branch_id = ?";
+    $params[] = $_GET['branch_id'];
+    $types .= "i";
+}
+
+if (count($conditions) > 0) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY lt.test_date DESC";
+
+$stmt = $conn->prepare($sql);
+if ($stmt) {
+    if (count($params) > 0) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $lab_tests[] = $row;
+        }
+    }
+    $stmt->close();
+} else {
+    $error_message = "Failed to prepare statement: " . $conn->error;
 }
 
 // ✅ Fetch patients for dropdown
@@ -183,11 +219,22 @@ if ($res) {
           </div>
 
           <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-              <div class="ms-md-auto py-2 py-md-0">
+            <div class="ms-md-auto py-2 py-md-0 d-flex align-items-center">
+              <form method="GET" action="lab-tests.php" class="form-inline me-3">
+                <label for="branch_filter" class="form-label me-2">Filter by Branch:</label>
+                <select class="form-control" id="branch_filter" name="branch_id" onchange="this.form.submit()">
+                  <option value="">All Branches</option>
+                  <?php foreach ($branches as $branch): ?>
+                    <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo (isset($_GET['branch_id']) && $_GET['branch_id'] == $branch['branch_id']) ? 'selected' : ''; ?>>
+                      <?php echo htmlspecialchars($branch['branch_name']); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </form>
+              <?php if ($_SESSION['role'] === 'admin'): ?>
                 <a href="add-lab-test.php" class="btn btn-primary btn-round">Add Lab Test</a>
-              </div>
-            <?php endif; ?>
+              <?php endif; ?>
+            </div>
           </div>
 
           <?php if ($error_message): ?>
@@ -221,6 +268,7 @@ if ($res) {
                           <th>Test Date</th>
                           <th>Status</th>
                           <th>Performed By</th>
+                          <th>Branch</th>
                           <th class="text-right">Action</th>
                         </tr>
                       </thead>
@@ -236,6 +284,7 @@ if ($res) {
                               <td><?= htmlspecialchars($test['test_date']); ?></td>
                               <td><?= htmlspecialchars($test['status']); ?></td>
                               <td><?= htmlspecialchars($test['performed_by'] ?? 'N/A'); ?></td>
+                              <td><?= htmlspecialchars($test['branch_name'] ?? 'N/A'); ?></td>
                               <td class="text-right d-flex">
                                   <a href="edit-lab-test.php?id=<?= $test['test_id']; ?>" class="btn-icon btn-round btn-primary text-white mx-2"><i class="fas fa-edit"></i></a>
                                   <a href="#" data-id="<?= $test['test_id']; ?>" class="btn-icon btn-round btn-danger text-white btn-delete-lab-test"><i class="fas fa-trash"></i></a>
@@ -244,7 +293,7 @@ if ($res) {
                           <?php endforeach; ?>
                         <?php else: ?>
                           <tr>
-                            <td colspan="9" class="text-center">No lab tests found.</td>
+                            <td colspan="10" class="text-center">No lab tests found.</td>
                           </tr>
                         <?php endif; ?>
                       </tbody>

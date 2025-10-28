@@ -93,8 +93,22 @@ if (isset($_GET['error'])) {
 
 // Fetch all products
 $products = [];
-$sql = "SELECT p.*, b.branch_name FROM products p LEFT JOIN branches b ON p.branch_id = b.branch_id ORDER BY p.name ASC";
-$result = $conn->query($sql);
+$sql = "SELECT p.*, b.branch_name 
+        FROM products p 
+        LEFT JOIN branches b ON p.branch_id = b.branch_id";
+
+// Filter by branch_id if the user is not an admin
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $sql .= " WHERE p.branch_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $_SESSION['branch_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+} else {
+    $result = $conn->query($sql);
+}
+
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $products[] = $row;

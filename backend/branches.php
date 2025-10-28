@@ -167,6 +167,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                           <th>Branch Name</th>
                           <th>Address</th>
                           <th>Contact Info</th>
+                          <th>State</th>
+                          <th>Country</th>
                           <th>Created At</th>
                           <th class="text-right">Action</th>
                         </tr>
@@ -178,6 +180,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                               <td><?php echo htmlspecialchars($branch['branch_name']); ?></td>
                               <td><?php echo htmlspecialchars($branch['address']); ?></td>
                               <td><?php echo htmlspecialchars($branch['phone']); ?></td>
+                              <td><?php echo htmlspecialchars($branch['state']); ?></td>
+                              <td><?php echo htmlspecialchars($branch['country']); ?></td>
                               <td><?php echo htmlspecialchars($branch['created_at']); ?></td>
                               <td class="text-right">
                                 <div class="d-flex">
@@ -189,7 +193,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                           <?php endforeach; ?>
                         <?php else: ?>
                           <tr>
-                            <td colspan="5" class="text-center">No branches found.</td>
+                            <td colspan="7" class="text-center">No branches found.</td>
                           </tr>
                         <?php endif; ?>
                       </tbody>

@@ -19,7 +19,7 @@ function createTable($conn, $sql, $tableName)
 }
 
 
-function insertAdminUser($conn, $username, $password, $email, $role)
+function insertAdminUser($conn, $username, $password, $email, $role, $country = "N/A", $state = "N/A", $branch_id = NULL)
 {
     // Check if the user already exists
     $check_stmt = $conn->prepare("SELECT id FROM login WHERE username = ?");
@@ -37,13 +37,11 @@ function insertAdminUser($conn, $username, $password, $email, $role)
 
     // User does not exist, proceed with insertion
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $conn->prepare("INSERT INTO login (staffname, username, password, email, address, mobile, country, state, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO login (staffname, username, password, email, address, mobile, country, state, role, status, branch_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $default_address = "N/A";
     $default_mobile = "N/A";
-    $default_country = "N/A";
-    $default_state = "N/A";
     $default_status = "active";
-    $stmt->bind_param("ssssssssss", $username, $username, $hashed_password, $email, $default_address, $default_mobile, $default_country, $default_state, $role, $default_status);
+    $stmt->bind_param("sssssssssss", $username, $username, $hashed_password, $email, $default_address, $default_mobile, $country, $state, $role, $default_status, $branch_id);
 
     if ($stmt->execute()) {
         // echo "Default admin user '$username' created successfully.<br>";
@@ -65,6 +63,8 @@ $tables = [
                 `address` TEXT,
                 `phone` VARCHAR(100),
                 `email` VARCHAR(255),
+                `state` VARCHAR(100) NULL,
+                `country` VARCHAR(100) NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -151,6 +151,7 @@ $tables = [
                 `paymentMethod` VARCHAR(255) NOT NULL,
                 `transactionId` VARCHAR(255) NULL,
                 `notes` TEXT,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -169,6 +170,7 @@ $tables = [
                 `net_salary` DECIMAL(10, 2) DEFAULT 0.00,
                 `payment_date` DATE NULL,
                 `status` ENUM('pending', 'paid', 'generated') NOT NULL DEFAULT 'generated',
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 UNIQUE (`staff_id`, `month`, `year`)
@@ -244,6 +246,7 @@ $tables = [
                 `diagnosis` TEXT,
                 `treatment` TEXT,
                 `notes` TEXT,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -291,6 +294,7 @@ $tables = [
                 `reason` TEXT,
                 `status` ENUM('admitted', 'discharged', 'transferred') NOT NULL DEFAULT 'admitted',
                 `admitted_by_staff_id` INT NULL,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -358,6 +362,7 @@ $tables = [
                 `description` TEXT,
                 `price` DECIMAL(10, 2) NOT NULL,
                 `department_id` INT NULL,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -377,6 +382,7 @@ $tables = [
             `totalAmount` DECIMAL(10,2) NOT NULL,
             `status` ENUM('Pending', 'Paid', 'Cancelled') NOT NULL DEFAULT 'Pending',
             `notes` TEXT NULL,
+            `branch_id` INT NULL,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -419,6 +425,7 @@ $tables = [
                 `side_effects` TEXT,
                 `expiry_date` DATE,
                 `storage_conditions` TEXT,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -449,7 +456,8 @@ $tables = [
                 `module` VARCHAR(255) NOT NULL,
                 `actionDate` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `ipAddress` VARCHAR(45) NOT NULL,
-                `details` TEXT NULL
+                `details` TEXT NULL,
+                `branch_id` INT NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
     [
@@ -474,6 +482,7 @@ $tables = [
             event_type VARCHAR(50) NOT NULL,  -- 'login', 'logout', 'timeout', 'hijack'
             ip_address VARCHAR(45) NOT NULL,
             user_agent TEXT NOT NULL,
+            branch_id INT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
@@ -612,6 +621,7 @@ $tables = [
                 `doctor_id` INT NOT NULL,
                 `note_title` VARCHAR(255) NOT NULL,
                 `note_content` TEXT NOT NULL,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -647,6 +657,7 @@ $tables = [
                 `height_cm` DECIMAL(6, 2) NULL,
                 `blood_oxygen_saturation` INT NULL,
                 `notes` TEXT,
+                `branch_id` INT NULL,
                 `recorded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -666,6 +677,7 @@ $tables = [
                 `total_amount` DECIMAL(10, 2) NOT NULL,
                 `bill_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `status` ENUM('pending', 'paid', 'cancelled') NOT NULL DEFAULT 'pending',
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -683,6 +695,7 @@ $tables = [
                 `dispensed` TINYINT(1) DEFAULT 0,
                 `dispensed_by` INT NULL,
                 `dispense_date` DATETIME NULL,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -711,6 +724,7 @@ $tables = [
                 `start_time` TIME,
                 `end_time` TIME,
                 `status` ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -722,6 +736,7 @@ $tables = [
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
                 `holidayName` VARCHAR(255) NOT NULL,
                 `holidayDate` DATE NOT NULL,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
@@ -735,6 +750,7 @@ $tables = [
                 `start_time` TIME NOT NULL,
                 `end_time` TIME NOT NULL,
                 `status` ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 UNIQUE KEY `doctor_day` (`doctor_id`, `day_of_week`)
@@ -752,6 +768,7 @@ $tables = [
                 `reason` TEXT,
                 `numDays` VARCHAR(255) NOT NULL,
                 `status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
@@ -778,6 +795,7 @@ $tables = [
                 `employeeShare` DECIMAL(10, 2) NOT NULL,
                 `organizationShare` DECIMAL(10, 2) NOT NULL,
                 `description` TEXT,
+                `branch_id` INT NULL,
                 `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
     ],
@@ -807,6 +825,7 @@ $tables = [
                 `net_salary` DECIMAL(10, 2) NOT NULL,
                 `salary_date` DATE NOT NULL,
                 `notes` TEXT,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -820,6 +839,7 @@ $tables = [
                 `tax_rate` DECIMAL(5, 2) NOT NULL,
                 `status` ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
                 `description` TEXT,
+                `branch_id` INT NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;"
@@ -846,7 +866,60 @@ foreach ($tables as $table) {
 }
 
 // Create default admin user
-insertAdminUser($conn, 'dinolabs', 'dinolabs', 'admin@dinolabs.com', 'admin');
+insertAdminUser($conn, 'dinolabs', 'dinolabs', 'admin@dinolabs.com', 'admin', 'N/A', 'N/A', NULL);
+
+// Add foreign key constraints
+$foreign_keys = [
+    "ALTER TABLE `login` ADD CONSTRAINT `fk_login_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `departments` ADD CONSTRAINT `fk_departments_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `patients` ADD CONSTRAINT `fk_patients_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `payments` ADD CONSTRAINT `fk_payments_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `payroll` ADD CONSTRAINT `fk_payroll_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `products` ADD CONSTRAINT `fk_products_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `medical_records` ADD CONSTRAINT `fk_medical_records_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `appointments` ADD CONSTRAINT `fk_appointments_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `rooms` ADD CONSTRAINT `fk_rooms_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `admissions` ADD CONSTRAINT `fk_admissions_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `opd_visits` ADD CONSTRAINT `fk_opd_visits_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `ipd_admissions` ADD CONSTRAINT `fk_ipd_admissions_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `lab_tests` ADD CONSTRAINT `fk_lab_tests_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `services` ADD CONSTRAINT `fk_services_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `invoices` ADD CONSTRAINT `fk_invoices_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `medications` ADD CONSTRAINT `fk_medications_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `expenses` ADD CONSTRAINT `fk_expenses_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `audit_logs` ADD CONSTRAINT `fk_audit_logs_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `session_logs` ADD CONSTRAINT `fk_session_logs_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `branch_product_inventory` ADD CONSTRAINT `fk_branch_product_inventory_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE CASCADE ON UPDATE CASCADE;",
+    "ALTER TABLE `vaccinations` ADD CONSTRAINT `fk_vaccinations_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `test_samples` ADD CONSTRAINT `fk_test_samples_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `staff_attendance` ADD CONSTRAINT `fk_staff_attendance_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `radiology_records` ADD CONSTRAINT `fk_radiology_records_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `operations` ADD CONSTRAINT `fk_operations_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `er_visits` ADD CONSTRAINT `fk_er_visits_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `doctor_notes` ADD CONSTRAINT `fk_doctor_notes_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `prescriptions` ADD CONSTRAINT `fk_prescriptions_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `patient_vitals` ADD CONSTRAINT `fk_patient_vitals_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `patient_bills` ADD CONSTRAINT `fk_patient_bills_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `drug_consultations` ADD CONSTRAINT `fk_drug_consultations_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `balance_sheets` ADD CONSTRAINT `fk_balance_sheets_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `schedules` ADD CONSTRAINT `fk_schedules_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `holidays` ADD CONSTRAINT `fk_holidays_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `doctor_schedules` ADD CONSTRAINT `fk_doctor_schedules_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `leaves` ADD CONSTRAINT `fk_leaves_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `provident_fund` ADD CONSTRAINT `fk_provident_fund_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `salary` ADD CONSTRAINT `fk_salary_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;",
+    "ALTER TABLE `taxes` ADD CONSTRAINT `fk_taxes_branch` FOREIGN KEY (`branch_id`) REFERENCES `branches`(`branch_id`) ON DELETE SET NULL ON UPDATE CASCADE;"
+];
+
+foreach ($foreign_keys as $sql) {
+    if ($conn->query($sql) === TRUE) {
+        // echo "Foreign key added successfully or already exists.<br>";
+    } else {
+        // echo "Error adding foreign key: " . $conn->error . "<br>";
+        error_log("Error adding foreign key: " . $conn->error);
+    }
+}
 
 // Close the connection
 $conn = null;

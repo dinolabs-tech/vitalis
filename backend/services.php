@@ -16,12 +16,13 @@ if (isset($_POST['add_service'])) {
   $description = $_POST['description'];
   $price = $_POST['price'];
   $department_id = $_POST['department_id'];
+  $branch_id = $_SESSION['branch_id'] ?? null; // Get branch_id from session
 
   $conn->begin_transaction();
   try {
-    $query = "INSERT INTO services (service_name, description, price, department_id) VALUES (?, ?, ?, ?)";
+    $query = "INSERT INTO services (service_name, description, price, department_id, branch_id) VALUES (?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('ssdi', $service_name, $description, $price, $department_id);
+    $stmt->bind_param('ssdis', $service_name, $description, $price, $department_id, $branch_id);
     if (!$stmt->execute()) {
       throw new Exception("Error adding service: " . $stmt->error);
     }
@@ -41,12 +42,13 @@ if (isset($_POST['edit_service'])) {
   $description = $_POST['description'];
   $price = $_POST['price'];
   $department_id = $_POST['department_id'];
+  $branch_id = $_SESSION['branch_id'] ?? null; // Get branch_id from session
 
   $conn->begin_transaction();
   try {
-    $query = "UPDATE services SET service_name=?, description=?, price=?, department_id=? WHERE id=?";
+    $query = "UPDATE services SET service_name=?, description=?, price=?, department_id=?, branch_id=? WHERE id=?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param('ssdsi', $service_name, $description, $price, $department_id, $id);
+    $stmt->bind_param('ssdisi', $service_name, $description, $price, $department_id, $branch_id, $id);
     if (!$stmt->execute()) {
       throw new Exception("Error updating service: " . $stmt->error);
     }
@@ -84,6 +86,45 @@ if (isset($_POST['id']) && !isset($_POST['add_service']) && !isset($_POST['edit_
     header("Location: services.php?error=" . urlencode($error_message));
     exit;
   }
+}
+
+// Fetch all services with branch filtering
+$services = [];
+$sql = "SELECT s.id, s.service_name, s.description, s.price, s.created_at, d.name AS department_name, b.branch_name 
+        FROM services s
+        LEFT JOIN departments d ON s.department_id = d.id
+        LEFT JOIN branches b ON s.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+// Apply branch filter if the user is not an admin or an admin with a specific branch_id
+if ($_SESSION['role'] !== 'admin' || ($_SESSION['role'] === 'admin' && isset($_SESSION['branch_id']) && $_SESSION['branch_id'] !== null)) {
+    $conditions[] = "s.branch_id = ?";
+    $params[] = $_SESSION['branch_id'];
+    $types .= "i";
+}
+
+if (!empty($conditions)) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY s.service_name ASC";
+
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        error_log("Prepare failed: " . $conn->error);
+        $result = false;
+    } else {
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+    }
+} else {
+    $result = $conn->query($sql);
 }
 
 ?>
@@ -150,32 +191,34 @@ if (isset($_POST['id']) && !isset($_POST['add_service']) && !isset($_POST['edit_
                           <th>Description</th>
                           <th>Price</th>
                           <th>Department</th>
+                          <th>Branch</th>
                           <th>Created At</th>
                           <th class="text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <?php
-                        $query = "SELECT s.*, d.name as department_name FROM services s LEFT JOIN departments d ON s.department_id = d.id";
-                        $stmt = $conn->prepare($query);
-                        $stmt->execute();
-                        $result = $stmt->get_result();
-                        while ($row = $result->fetch_object()):
-                        ?>
+                        <?php if ($result->num_rows > 0): ?>
+                          <?php while ($row = $result->fetch_object()): ?>
+                            <tr>
+                              <td><?php echo htmlentities($row->service_name); ?></td>
+                              <td><?php echo htmlentities($row->description); ?></td>
+                              <td><?php echo htmlentities($row->price); ?></td>
+                              <td><?php echo htmlentities($row->department_name); ?></td>
+                              <td><?php echo htmlentities($row->branch_name ?? 'N/A'); ?></td>
+                              <td><?php echo htmlentities(date('Y-m-d H:i', strtotime($row->created_at))); ?></td>
+                              <td class="text-right">
+                                <div class="d-flex">
+                                  <a href="edit-service.php?id=<?php echo $row->id; ?>" class="btn-icon btn-round btn-primary text-white me-2"><i class="fas fa-edit"></i></a>
+                                  <a href="#" data-id="<?php echo $row->id; ?>" data-name="<?php echo htmlspecialchars($row->service_name); ?>" class="btn-icon btn-round btn-danger text-white btn-delete-service"><i class="fas fa-trash"></i> </a>
+                                </div>
+                              </td>
+                            </tr>
+                          <?php endwhile; ?>
+                        <?php else: ?>
                           <tr>
-                            <td><?php echo htmlentities($row->service_name); ?></td>
-                            <td><?php echo htmlentities($row->description); ?></td>
-                            <td><?php echo htmlentities($row->price); ?></td>
-                            <td><?php echo htmlentities($row->department_name); ?></td>
-                            <td><?php echo htmlentities(date('Y-m-d H:i', strtotime($row->created_at))); ?></td>
-                            <td class="text-right">
-                              <div class="d-flex">
-                                <a href="edit-service.php?id=<?php echo $row->id; ?>" class="btn-icon btn-round btn-primary text-white me-2"><i class="fas fa-edit"></i></a>
-                                <a href="#" data-id="<?php echo $row->id; ?>" data-name="<?php echo htmlspecialchars($row->service_name); ?>" class="btn-icon btn-round btn-danger text-white btn-delete-service"><i class="fas fa-trash"></i> </a>
-                              </div>
-                            </td>
+                            <td colspan="6" class="text-center">No services found.</td>
                           </tr>
-                        <?php endwhile; ?>
+                        <?php endif; ?>
                       </tbody>
                     </table>
                   </div>
@@ -227,3 +270,35 @@ if (isset($_POST['id']) && !isset($_POST['add_service']) && !isset($_POST['edit_
 </body>
 
 </html>
+</final_file_content>
+
+IMPORTANT: For any future changes to this file, use the final_file_content shown above as your reference. This content reflects the current state of the file, including any auto-formatting (e.g., if you used single quotes but the formatter converted them to double quotes). Always base your SEARCH/REPLACE operations on this final version to ensure accuracy.
+
+<environment_details>
+# Visual Studio Code Visible Files
+backend/services.php
+
+# Visual Studio Code Open Tabs
+backend/add-branch.php
+backend/edit-branch.php
+backend/patients.php
+backend/doctors.php
+backend/database/database_schema.php
+backend/employees.php
+backend/backup.php
+backend/appointments.php
+backend/departments.php
+backend/branches.php
+backend/products.php
+backend/index.php
+backend/invoices.php
+backend/services.php
+
+# Current Time
+10/28/2025, 1:25:02 PM (Africa/Lagos, UTC+1:00)
+
+# Context Window Usage
+231,900 / 1,048.576K tokens used (22%)
+
+# Current Mode
+ACT MODE

@@ -56,14 +56,46 @@ if (isset($_POST['id'])) {
 
 // Fetch all IPD admissions
 $ipd_admissions = [];
+$ipd_admissions = [];
 $sql = "SELECT ia.*, p.first_name, p.last_name, r.room_number, l.staffname as doctor_name, b.branch_name
         FROM ipd_admissions ia
         LEFT JOIN patients p ON ia.patient_id = p.patient_id
         LEFT JOIN rooms r ON ia.room_id = r.id
         LEFT JOIN login l ON ia.doctor_id = l.id
-        LEFT JOIN branches b ON ia.branch_id = b.branch_id
-        ORDER BY ia.admission_date DESC";
-$result = $conn->query($sql);
+        LEFT JOIN branches b ON ia.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+if (isset($_GET['branch_id']) && $_GET['branch_id'] !== '') {
+    $conditions[] = "ia.branch_id = ?";
+    $params[] = $_GET['branch_id'];
+    $types .= "i";
+}
+
+if (count($conditions) > 0) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY ia.admission_date DESC";
+
+$stmt = $conn->prepare($sql);
+if ($stmt) {
+    if (count($params) > 0) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $ipd_admissions[] = $row;
+        }
+    }
+    $stmt->close();
+} else {
+    $error_message = "Failed to prepare statement: " . $conn->error;
+}
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $ipd_admissions[] = $row;
@@ -137,13 +169,23 @@ if ($result_branches) {
             </ul>
           </div>
 
-          <div
-            class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
-            <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'nurse'): ?>
-              <div class="ms-md-auto py-2 py-md-0">
+          <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+            <div class="ms-md-auto py-2 py-md-0 d-flex align-items-center">
+              <form method="GET" action="ipd-admissions.php" class="form-inline me-3">
+                <label for="branch_filter" class="form-label me-2">Filter by Branch:</label>
+                <select class="form-control" id="branch_filter" name="branch_id" onchange="this.form.submit()">
+                  <option value="">All Branches</option>
+                  <?php foreach ($branches as $branch): ?>
+                    <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo (isset($_GET['branch_id']) && $_GET['branch_id'] == $branch['branch_id']) ? 'selected' : ''; ?>>
+                      <?php echo htmlspecialchars($branch['branch_name']); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </form>
+              <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'nurse'): ?>
                 <a href="add-ipd-admission.php" class="btn btn-primary btn-round">Add IPD Admission</a>
-              </div>
-            <?php endif; ?>
+              <?php endif; ?>
+            </div>
           </div>
 
           <?php if ($error_message): ?>

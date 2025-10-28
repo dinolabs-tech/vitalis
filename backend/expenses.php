@@ -65,13 +65,34 @@ if (isset($_POST['id'])) {
                           <th>Amount</th>
                           <th>Paid By</th>
                           <th>Status</th>
+                          <th>Branch</th>
                           <th class="text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <?php
-                        $ret = "SELECT * FROM expenses";
-                        $stmt = $mysqli->prepare($ret);
+                        $sql = "SELECT e.*, b.branch_name 
+                                FROM expenses e
+                                LEFT JOIN branches b ON e.branch_id = b.branch_id";
+                        
+                        $conditions = [];
+                        $params = [];
+                        $types = "";
+
+                        if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+                            $conditions[] = "e.branch_id = ?";
+                            $params[] = $_SESSION['branch_id'];
+                            $types .= "i";
+                        }
+
+                        if (!empty($conditions)) {
+                            $sql .= " WHERE " . implode(" AND ", $conditions);
+                        }
+
+                        $stmt = $mysqli->prepare($sql);
+                        if (!empty($params)) {
+                            $stmt->bind_param($types, ...$params);
+                        }
                         $stmt->execute();
                         $res = $stmt->get_result();
                         while ($row = $res->fetch_object()) {
@@ -83,6 +104,7 @@ if (isset($_POST['id'])) {
                             <td>$<?php echo $row->amount; ?></td>
                             <td><?php echo $row->paidBy; ?></td>
                             <td><?php echo $row->status; ?></td>
+                            <td><?php echo htmlspecialchars($row->branch_name ?? 'N/A'); ?></td>
                             <td class="text-right">
                               <div class="d-flex">
                                 <a href="edit-expense.php?id=<?php echo $row->id; ?>" class="btn-icon btn-round btn-primary text-white me-2"><i class="fas fa-edit"></i></a>

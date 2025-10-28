@@ -40,6 +40,8 @@ if (isset($_POST['id'])) {
 
 // Fetch all operations
 $operations = [];
+$filter_branch_id = $_GET['branch_id'] ?? '';
+
 $sql = "SELECT o.*, p.first_name, p.last_name, d.staffname as doctor_name, r.room_number, b.branch_name
         FROM operations o
         LEFT JOIN patients p ON o.patient_id = p.patient_id
@@ -47,8 +49,18 @@ $sql = "SELECT o.*, p.first_name, p.last_name, d.staffname as doctor_name, r.roo
         LEFT JOIN login d ON doc.staff_id = d.id
         LEFT JOIN rooms r ON o.room_id = r.id
         LEFT JOIN branches b ON o.branch_id = b.branch_id
-        ORDER BY o.operation_date DESC";
-$result = $conn->query($sql);
+        WHERE 1=1";
+
+if (!empty($filter_branch_id)) {
+  $sql .= " AND o.branch_id = ?";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param("i", $filter_branch_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+} else {
+  $sql .= " ORDER BY o.operation_date DESC";
+  $result = $conn->query($sql);
+}
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $operations[] = $row;
@@ -121,6 +133,33 @@ if ($result_branches) {
               </li>
             </ul>
           </div>
+
+          <form method="GET" action="">
+            <div class="row">
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="branch_id">Branch</label>
+                  <select class="form-control" id="branch_id" name="branch_id">
+                    <option value="">All Branches</option>
+                    <?php
+                    $filter_branch_id = $_GET['branch_id'] ?? '';
+                    foreach ($branches as $branch): ?>
+                      <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo ($filter_branch_id == $branch['branch_id']) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($branch['branch_name']); ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>&nbsp;</label><br>
+                  <button type="submit" class="btn btn-primary">Filter</button>
+                  <a href="operations.php" class="btn btn-secondary">Reset</a>
+                </div>
+              </div>
+            </div>
+          </form>
 
           <div
             class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">

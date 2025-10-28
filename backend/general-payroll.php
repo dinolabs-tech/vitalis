@@ -11,8 +11,33 @@ $success_message = '';
 $error_message = '';
 
 // Fetch all salary records
-$ret = "SELECT s.*, e.staffname AS employeeName FROM salary s JOIN login e ON s.employee_id = e.id ORDER BY s.salary_date DESC";
-$stmt = $conn->prepare($ret);
+$salaries = [];
+$sql = "SELECT s.*, e.staffname AS employeeName, b.branch_name 
+        FROM salary s 
+        JOIN login e ON s.employee_id = e.id 
+        LEFT JOIN branches b ON e.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+// Filter by branch_id if the user is not an admin
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $conditions[] = "e.branch_id = ?";
+    $params[] = $_SESSION['branch_id'];
+    $types .= "i";
+}
+
+if (!empty($conditions)) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY s.salary_date DESC";
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
 $stmt->execute();
 $res = $stmt->get_result();
 $salaries = $res->fetch_all(MYSQLI_ASSOC);
@@ -72,6 +97,7 @@ $stmt->close();
                           <th>Total Additions</th>
                           <th>Total Deductions</th>
                           <th>Net Salary</th>
+                          <th>Branch</th>
                           <th>Salary Date</th>
                           <th class="text-right">Actions</th>
                         </tr>
@@ -87,6 +113,7 @@ $stmt->close();
                             <td>$<?php echo $row['total_additions']; ?></td>
                             <td>$<?php echo $row['total_deductions']; ?></td>
                             <td>$<?php echo $row['net_salary']; ?></td>
+                            <td><?php echo htmlspecialchars($row['branch_name'] ?? 'N/A'); ?></td>
                             <td><?php echo date('d', strtotime($row['salary_date'])); ?></td>
                             <td class="text-right d-flex">
                                 <a href="salary-view.php?id=<?php echo $row['id']; ?>" class="btn-icon btn-round btn-primary text-white"><i class="fas fa-eye"></i></a>
@@ -95,7 +122,7 @@ $stmt->close();
                         <?php
                           }
                         } else {
-                          echo '<tr><td colspan="7" class="text-center">No payroll records found.</td></tr>';
+                          echo '<tr><td colspan="8" class="text-center">No payroll records found.</td></tr>';
                         }
                         ?>
                       </tbody>

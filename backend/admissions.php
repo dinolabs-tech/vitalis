@@ -55,13 +55,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
 
 // Fetch all admissions
 $admissions = [];
-$sql = "SELECT a.*, p.first_name, p.last_name, r.room_number, s.staffname AS admitted_by_staff_name
+$sql = "SELECT a.*, p.first_name, p.last_name, r.room_number, s.staffname AS admitted_by_staff_name, b.branch_name
         FROM admissions a
         LEFT JOIN patients p ON a.patient_id = p.patient_id
         LEFT JOIN rooms r ON a.room_id = r.id
         LEFT JOIN login s ON a.admitted_by_staff_id = s.id
-        ORDER BY a.admission_date DESC";
-$result = $conn->query($sql);
+        LEFT JOIN branches b ON a.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+// Filter by branch_id if the user is not an admin
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $conditions[] = "a.branch_id = ?";
+    $params[] = $_SESSION['branch_id'];
+    $types .= "i";
+}
+
+if (!empty($conditions)) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY a.admission_date DESC";
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $admissions[] = $row;
@@ -138,6 +162,7 @@ if ($result) {
                         <th>Reason</th>
                         <th>Status</th>
                         <th>Admitted By</th>
+                        <th>Branch</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>
@@ -152,6 +177,7 @@ if ($result) {
                             <td><?= htmlspecialchars($admission['reason']); ?></td>
                             <td><?= htmlspecialchars($admission['status']); ?></td>
                             <td><?= htmlspecialchars($admission['admitted_by_staff_name'] ?? 'N/A'); ?></td>
+                            <td><?= htmlspecialchars($admission['branch_name'] ?? 'N/A'); ?></td>
                             <td class="text-right d-flex">
                               <a href="edit-admission.php?id=<?= $admission['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2">
                                 <i class="fas fa-edit"></i>
@@ -167,7 +193,7 @@ if ($result) {
                         <?php endforeach; ?>
                       <?php else: ?>
                         <tr>
-                          <td colspan="8" class="text-center">No admissions found.</td>
+                          <td colspan="9" class="text-center">No admissions found.</td>
                         </tr>
                       <?php endif; ?>
                     </tbody>

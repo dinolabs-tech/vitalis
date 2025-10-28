@@ -10,8 +10,21 @@ if (!isset($_SESSION['loggedin'])) {
 $success_message = '';
 $error_message = '';
 $departments = [];
-$sql = "SELECT id, name, description FROM departments ORDER BY name";
-$result = $conn->query($sql);
+$sql = "SELECT d.id, d.name, d.description, b.branch_name 
+        FROM departments d
+        LEFT JOIN branches b ON d.branch_id = b.branch_id";
+
+// Filter by branch_id if the user is not an admin
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $sql .= " WHERE d.branch_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $_SESSION['branch_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+} else {
+    $result = $conn->query($sql);
+}
 
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
@@ -103,13 +116,14 @@ if (isset($_POST['id'])) {
                           <th>S/N</th>
                           <th>Department Name</th>
                           <th>Description</th>
+                          <th>Branch</th>
                           <th class="text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         <?php if (empty($departments)): ?>
                           <tr>
-                            <td colspan="4" class="text-center">No departments found.</td>
+                            <td colspan="5" class="text-center">No departments found.</td>
                           </tr>
                         <?php else: ?>
                           <?php $count = 1;
@@ -118,6 +132,7 @@ if (isset($_POST['id'])) {
                               <td><?php echo $count++; ?></td>
                               <td><?php echo htmlspecialchars($department['name']); ?></td>
                               <td><?php echo htmlspecialchars($department['description']); ?></td>
+                              <td><?php echo htmlspecialchars($department['branch_name'] ?? 'N/A'); ?></td>
                               <td class="text-right d-flex">
                                 <a href="edit-department.php?id=<?php echo $department['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
                                 <a href="#" data-id="<?php echo $department['id']; ?>" data-department-name="<?php echo htmlspecialchars($department['name']); ?>" class="btn-icon btn-danger btn-round text-white btn-delete-department"><i class="fas fa-trash"></i></a>

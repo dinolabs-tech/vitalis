@@ -104,13 +104,36 @@ if (isset($_POST['id'])) {
                           <th>To Date</th>
                           <th>Reason</th>
                           <th>Status</th>
+                          <th>Branch</th>
                           <th class="text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <?php
-                        $ret = "SELECT l.*, e.staffname, lt.leaveType FROM leaves l JOIN login e ON l.employeeId = e.id JOIN leave_types lt ON l.leaveTypeId = lt.id";
-                        $stmt = $conn->prepare($ret);
+                        $sql = "SELECT l.*, e.staffname, lt.leaveType, b.branch_name 
+                                FROM leaves l 
+                                JOIN login e ON l.employeeId = e.id 
+                                JOIN leave_types lt ON l.leaveTypeId = lt.id
+                                LEFT JOIN branches b ON l.branch_id = b.branch_id";
+                        
+                        $conditions = [];
+                        $params = [];
+                        $types = "";
+
+                        if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+                            $conditions[] = "l.branch_id = ?";
+                            $params[] = $_SESSION['branch_id'];
+                            $types .= "i";
+                        }
+
+                        if (!empty($conditions)) {
+                            $sql .= " WHERE " . implode(" AND ", $conditions);
+                        }
+
+                        $stmt = $conn->prepare($sql);
+                        if (!empty($params)) {
+                            $stmt->bind_param($types, ...$params);
+                        }
                         $stmt->execute();
                         $res = $stmt->get_result();
                         while ($row = $res->fetch_object()) {
@@ -122,8 +145,9 @@ if (isset($_POST['id'])) {
                             <td><?php echo $row->toDate; ?></td>
                             <td><?php echo $row->reason; ?></td>
                             <td><?php echo $row->status; ?></td>
+                            <td><?php echo htmlspecialchars($row->branch_name ?? 'N/A'); ?></td>
                             <td class="text-right d-flex">
-                                <a href="edit-leave.php?id=<?php echo $row->id; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
+                                <a href="edit-leave.php?id=<?php echo $row->id; ?>" class="btn-icon btn-round btn-primary text-white mx-2"><i class="fas fa-edit"></i></a>
                                 <a href="#" data-id="<?php echo $row->id; ?>" data-employee-name="<?php echo htmlspecialchars($row->staffname); ?>" data-leave-type="<?php echo htmlspecialchars($row->leaveType); ?>" class="btn-icon btn-danger btn-round text-white btn-delete-leave"><i class="fas fa-trash"></i></a>
                             </td>
                           </tr>

@@ -90,13 +90,34 @@ if (isset($_POST['id'])) {
                           <th>Tax Rate (%)</th>
                           <th>Status</th>
                           <th>Description</th>
+                          <th>Branch</th>
                           <th class="text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <?php
-                        $ret = "SELECT * FROM taxes";
-                        $stmt = $conn->prepare($ret);
+                        $sql = "SELECT t.*, b.branch_name 
+                                FROM taxes t
+                                LEFT JOIN branches b ON t.branch_id = b.branch_id";
+                        
+                        $conditions = [];
+                        $params = [];
+                        $types = "";
+
+                        if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+                            $conditions[] = "t.branch_id = ?";
+                            $params[] = $_SESSION['branch_id'];
+                            $types .= "i";
+                        }
+
+                        if (!empty($conditions)) {
+                            $sql .= " WHERE " . implode(" AND ", $conditions);
+                        }
+
+                        $stmt = $conn->prepare($sql);
+                        if (!empty($params)) {
+                            $stmt->bind_param($types, ...$params);
+                        }
                         $stmt->execute();
                         $res = $stmt->get_result();
                         while ($row = $res->fetch_object()) {
@@ -106,12 +127,14 @@ if (isset($_POST['id'])) {
                             <td><?php echo $row->tax_rate; ?></td>
                             <td><?php echo $row->status; ?></td>
                             <td><?php echo $row->description; ?></td>
+                            <td><?php echo htmlspecialchars($row->branch_name ?? 'N/A'); ?></td>
                             <td class="text-right">
                                 <div class="d-flex">
                                   <a href="edit-tax.php?id=<?php echo $row->id; ?>" class="btn-primary btn-icon btn-round text-white me-2"><i class="fas fa-edit"></i></a>
                                   <a href="#" data-id="<?php echo $row->id; ?>" data-name="<?php echo htmlspecialchars($row->tax_name); ?>" class="btn-icon btn-danger btn-round text-white btn-delete-tax"><i class="fas fa-trash"></i></a>
                                 </div>
                               </td>
+                          </tr>
                         <?php } ?>
                       </tbody>
                     </table>

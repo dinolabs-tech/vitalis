@@ -13,20 +13,45 @@ $error_message = '';
 $appointments = [];
 
 // Base SQL query
-$sql = "SELECT a.id, p.first_name, p.last_name, l.staffname AS doctor_name, a.appointment_date, a.status, a.reason
+$sql = "SELECT a.id, p.first_name, p.last_name, l.staffname AS doctor_name, a.appointment_date, a.status, a.reason, b.branch_name
         FROM appointments a
         JOIN patients p ON a.patient_id = p.id
-        LEFT JOIN login l ON a.doctor_id = l.id";
+        LEFT JOIN login l ON a.doctor_id = l.id
+        LEFT JOIN branches b ON a.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
 
 // Apply doctor filter if logged-in user is a doctor
 if (isset($_SESSION['role']) && $_SESSION['role'] == 'doctor' && isset($_SESSION['user_id'])) {
-  $doctor_id = intval($_SESSION['user_id']); // sanitize
-  $sql .= " WHERE a.doctor_id = $doctor_id";
+  $conditions[] = "a.doctor_id = ?";
+  $params[] = $_SESSION['user_id'];
+  $types .= "i";
+}
+
+// Apply branch filter if the user is not an admin and has a branch_id
+if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+    $conditions[] = "a.branch_id = ?";
+    $params[] = $_SESSION['branch_id'];
+    $types .= "i";
+}
+
+if (!empty($conditions)) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
 }
 
 $sql .= " ORDER BY a.appointment_date DESC";
 
-$result = $conn->query($sql);
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+} else {
+    $result = $conn->query($sql);
+}
 
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
@@ -115,12 +140,13 @@ if (isset($_POST['id'])) {
                         <th>Appointment Date</th>
                         <th>Reason</th>
                         <th>Status</th>
+                        <th>Branch</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php if (empty($appointments)): ?>
-                        <tr><td colspan="7" class="text-center">No appointments found.</td></tr>
+                        <tr><td colspan="8" class="text-center">No appointments found.</td></tr>
                       <?php else: ?>
                         <?php foreach ($appointments as $appointment): ?>
                           <tr>
@@ -138,6 +164,7 @@ if (isset($_POST['id'])) {
                               ?>
                               <span class="badge <?= $badge_class; ?>"><?= ucfirst($status); ?></span>
                             </td>
+                            <td><?= htmlspecialchars($appointment['branch_name'] ?? 'N/A'); ?></td>
                             <?php if (in_array($_SESSION['role'], ['admin', 'receptionist', 'doctor'])): ?>
                               <td class="text-right d-flex">
                                   <a href="edit-appointment.php?id=<?= $appointment['id']; ?>" class="btn-icon btn-round btn-primary text-white mx-2"><i class="fas fa-edit"></i></a>

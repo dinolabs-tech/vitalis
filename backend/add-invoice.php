@@ -3,10 +3,26 @@ include 'includes/config.php';
 include 'includes/checklogin.php';
 session_start();
 
+$user_branch_id = $_SESSION['branch_id'] ?? null;
+$user_role = $_SESSION['role'] ?? '';
+
+$branch_filter_sql = '';
+$branch_params = [];
+$branch_param_types = '';
+
+if ($user_role !== 'admin' || ($user_role === 'admin' && $user_branch_id !== null)) {
+    $branch_filter_sql = " WHERE branch_id = ?";
+    $branch_params = [$user_branch_id];
+    $branch_param_types = 'i';
+}
+
 // Fetch products
 $products = [];
-$ret_products = "SELECT id, name, sell_price FROM products";
+$ret_products = "SELECT id, name, sell_price FROM products" . $branch_filter_sql;
 $stmt_products = $mysqli->prepare($ret_products);
+if (!empty($branch_params)) {
+    $stmt_products->bind_param($branch_param_types, ...$branch_params);
+}
 $stmt_products->execute();
 $res_products = $stmt_products->get_result();
 while ($row_product = $res_products->fetch_object()) {
@@ -16,8 +32,11 @@ $stmt_products->close();
 
 // Fetch services
 $services = [];
-$ret_services = "SELECT id, service_name, price FROM services";
+$ret_services = "SELECT id, service_name, price FROM services" . $branch_filter_sql;
 $stmt_services = $mysqli->prepare($ret_services);
+if (!empty($branch_params)) {
+    $stmt_services->bind_param($branch_param_types, ...$branch_params);
+}
 $stmt_services->execute();
 $res_services = $stmt_services->get_result();
 while ($row_service = $res_services->fetch_object()) {
@@ -51,6 +70,7 @@ if (isset($_POST['submit'])) {
   $dueDate     = $_POST['dueDate'];
   $status      = $_POST['status'];
   $notes       = $_POST['notes'];
+  $branch_id_insert = $user_branch_id; // Use the logged-in user's branch_id
 
   // Calculate total amount from invoice items
   $subtotal = 0;
@@ -65,9 +85,9 @@ if (isset($_POST['submit'])) {
   $totalAmount = $subtotal + $tax;
 
   // Insert into invoices table
-  $query_invoice = "INSERT INTO invoices (invoiceId, patientId, doctorId, invoiceDate, dueDate, subtotal, tax, totalAmount, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?)";
+  $query_invoice = "INSERT INTO invoices (invoiceId, patientId, doctorId, invoiceDate, dueDate, subtotal, tax, totalAmount, status, notes, branch_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
   $stmt_invoice  = $mysqli->prepare($query_invoice);
-  $stmt_invoice->bind_param('siissddsss', $invoiceId, $patientId, $doctorId, $invoiceDate, $dueDate, $subtotal, $tax, $totalAmount, $status, $notes);
+  $stmt_invoice->bind_param('siissddsssi', $invoiceId, $patientId, $doctorId, $invoiceDate, $dueDate, $subtotal, $tax, $totalAmount, $status, $notes, $branch_id_insert);
   $stmt_invoice->execute();
   $invoice_id = $stmt_invoice->insert_id;
   $stmt_invoice->close();
@@ -189,13 +209,17 @@ if (isset($_POST['submit'])) {
                           <select name="patientId" class="form-control form-select searchable-dropdown mt-5" required>
                             <option value="" selected disabled>Select Patient</option>
                             <?php
-                            $ret = "SELECT id, first_name, last_name FROM patients";
+                            $ret = "SELECT id, first_name, last_name FROM patients" . $branch_filter_sql;
                             $stmt = $mysqli->prepare($ret);
+                            if (!empty($branch_params)) {
+                                $stmt->bind_param($branch_param_types, ...$branch_params);
+                            }
                             $stmt->execute();
                             $res = $stmt->get_result();
                             while ($row = $res->fetch_object()) {
                               echo "<option value='{$row->id}'>{$row->first_name} {$row->last_name}</option>";
                             }
+                            $stmt->close();
                             ?>
                           </select>
                         </div>
@@ -205,13 +229,17 @@ if (isset($_POST['submit'])) {
                           <select name="doctorId" class="form-control form-select searchable-dropdown mt-5" required>
                             <option value="" selected disabled>Select Doctor</option>
                             <?php
-                            $ret = "SELECT * FROM login WHERE role='doctor'";
+                            $ret = "SELECT id, staffname FROM login WHERE role='doctor'" . $branch_filter_sql;
                             $stmt = $mysqli->prepare($ret);
+                            if (!empty($branch_params)) {
+                                $stmt->bind_param($branch_param_types, ...$branch_params);
+                            }
                             $stmt->execute();
                             $res = $stmt->get_result();
                             while ($row = $res->fetch_object()) {
                               echo "<option value='{$row->id}'>{$row->staffname}</option>";
                             }
+                            $stmt->close();
                             ?>
                           </select>
                         </div>

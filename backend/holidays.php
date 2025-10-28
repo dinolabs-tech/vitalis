@@ -71,13 +71,34 @@ if (isset($_POST['id'])) {
                         <tr>
                           <th>Holiday Name</th>
                           <th>Holiday Date</th>
+                          <th>Branch</th>
                           <th class="text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <?php
-                        $ret = "SELECT * FROM holidays";
-                        $stmt = $mysqli->prepare($ret);
+                        $sql = "SELECT h.*, b.branch_name 
+                                FROM holidays h
+                                LEFT JOIN branches b ON h.branch_id = b.branch_id";
+                        
+                        $conditions = [];
+                        $params = [];
+                        $types = "";
+
+                        if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+                            $conditions[] = "h.branch_id = ?";
+                            $params[] = $_SESSION['branch_id'];
+                            $types .= "i";
+                        }
+
+                        if (!empty($conditions)) {
+                            $sql .= " WHERE " . implode(" AND ", $conditions);
+                        }
+
+                        $stmt = $mysqli->prepare($sql);
+                        if (!empty($params)) {
+                            $stmt->bind_param($types, ...$params);
+                        }
                         $stmt->execute();
                         $res = $stmt->get_result();
                         while ($row = $res->fetch_object()) {
@@ -85,6 +106,7 @@ if (isset($_POST['id'])) {
                           <tr>
                             <td><?php echo $row->holidayName; ?></td>
                             <td><?php echo $row->holidayDate; ?></td>
+                            <td><?php echo htmlspecialchars($row->branch_name ?? 'N/A'); ?></td>
                             <td class="text-right d-flex">
                                 <a href="edit-holiday.php?id=<?php echo $row->id; ?>" class="btn-icon btn-round btn-primary text-white mx-2"><i class="fas fa-edit"></i></a>
                                 <a href="#" data-id="<?php echo $row->id; ?>" class="btn-icon btn-round btn-danger text-white btn-delete-holiday"><i class="fas fa-trash"></i> </a>

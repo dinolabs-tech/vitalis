@@ -2,6 +2,15 @@
 session_start();
 include_once('database/db_connect.php');
 
+// Fetch branches for dropdown
+$branches = [];
+$result_branches = $conn->query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name ASC");
+if ($result_branches) {
+  while ($row = $result_branches->fetch_assoc()) {
+    $branches[] = $row;
+  }
+}
+
 if (!isset($_SESSION['loggedin']) || $_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'lab_technician' && $_SESSION['role'] !== 'nurse') {
   header("Location: login.php");
   exit;
@@ -83,13 +92,39 @@ $sql = "SELECT ts.*, lt.test_name, p.first_name, p.last_name, s.staffname as col
         LEFT JOIN lab_tests lt ON ts.lab_test_id = lt.id
         LEFT JOIN patients p ON lt.patient_id = p.id
         LEFT JOIN login s ON ts.collected_by_staff_id = s.id
-        LEFT JOIN branches b ON ts.branch_id = b.branch_id
-        ORDER BY ts.collection_date DESC";
-$result = $conn->query($sql);
-if ($result) {
-  while ($row = $result->fetch_assoc()) {
-    $test_samples[] = $row;
-  }
+        LEFT JOIN branches b ON ts.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+if (isset($_GET['branch_id']) && $_GET['branch_id'] !== '') {
+    $conditions[] = "ts.branch_id = ?";
+    $params[] = $_GET['branch_id'];
+    $types .= "i";
+}
+
+if (count($conditions) > 0) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY ts.collection_date DESC";
+
+$stmt = $conn->prepare($sql);
+if ($stmt) {
+    if (count($params) > 0) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $test_samples[] = $row;
+        }
+    }
+    $stmt->close();
+} else {
+    $error_message = "Failed to prepare statement: " . $conn->error;
 }
 
 // Fetch test sample data for editing if ID is provided in GET

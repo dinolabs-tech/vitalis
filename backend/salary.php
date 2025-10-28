@@ -90,14 +90,36 @@ if (isset($_POST['id'])) {
                           <th>Total Additions</th>
                           <th>Total Deductions</th>
                           <th>Net Salary</th>
+                          <th>Branch</th>
                           <th>Salary Date</th>
                           <th class="text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <?php
-                        $ret = "SELECT s.*, e.staffname AS employeeName FROM salary s JOIN login e ON s.employee_id = e.id";
-                        $stmt = $conn->prepare($ret);
+                        $sql = "SELECT s.*, e.staffname AS employeeName, b.branch_name 
+                                FROM salary s 
+                                JOIN login e ON s.employee_id = e.id 
+                                LEFT JOIN branches b ON e.branch_id = b.branch_id";
+                        
+                        $conditions = [];
+                        $params = [];
+                        $types = "";
+
+                        if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+                            $conditions[] = "e.branch_id = ?";
+                            $params[] = $_SESSION['branch_id'];
+                            $types .= "i";
+                        }
+
+                        if (!empty($conditions)) {
+                            $sql .= " WHERE " . implode(" AND ", $conditions);
+                        }
+
+                        $stmt = $conn->prepare($sql);
+                        if (!empty($params)) {
+                            $stmt->bind_param($types, ...$params);
+                        }
                         $stmt->execute();
                         $res = $stmt->get_result();
                         while ($row = $res->fetch_object()) {
@@ -108,6 +130,7 @@ if (isset($_POST['id'])) {
                             <td>$<?php echo $row->total_additions; ?></td>
                             <td>$<?php echo $row->total_deductions; ?></td>
                             <td>$<?php echo $row->net_salary; ?></td>
+                            <td><?php echo htmlspecialchars($row->branch_name ?? 'N/A'); ?></td>
                             <td><?php echo $row->salary_date; ?></td>
                             <td class="text-right d-flex">
                                 <a href="salary-view.php?id=<?php echo $row->id; ?>" class="btn-icon btn-round btn-primary text-white"><i class="fas fa-eye"></i></a>

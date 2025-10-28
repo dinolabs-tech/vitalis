@@ -12,13 +12,25 @@ $error_message = '';
 
 // Placeholder for ER visits data retrieval
 $er_visits = [];
+$filter_branch_id = $_GET['branch_id'] ?? '';
 
 // Fetch ER visits data
-$sql = "SELECT ev.*, p.first_name, p.last_name 
+$sql = "SELECT ev.*, p.first_name, p.last_name, b.branch_name
         FROM er_visits ev
         JOIN patients p ON ev.patient_id = p.patient_id
-        ORDER BY ev.arrival_time DESC";
-$result = $conn->query($sql);
+        LEFT JOIN branches b ON ev.branch_id = b.branch_id
+        WHERE 1=1";
+
+if (!empty($filter_branch_id)) {
+  $sql .= " AND ev.branch_id = ?";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param("i", $filter_branch_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+} else {
+  $sql .= " ORDER BY ev.arrival_time DESC";
+  $result = $conn->query($sql);
+}
 
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
@@ -75,6 +87,41 @@ if (isset($_POST['id'])) {
             </ul>
           </div>
 
+          <form method="GET" action="">
+            <div class="row">
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="branch_id">Branch</label>
+                  <select class="form-control" id="branch_id" name="branch_id">
+                    <option value="">All Branches</option>
+                    <?php
+                    // Fetch branches for dropdown
+                    $branches = [];
+                    $result_branches = $conn->query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name ASC");
+                    if ($result_branches) {
+                      while ($row = $result_branches->fetch_assoc()) {
+                        $branches[] = $row;
+                      }
+                    }
+                    $filter_branch_id = $_GET['branch_id'] ?? '';
+                    foreach ($branches as $branch): ?>
+                      <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo ($filter_branch_id == $branch['branch_id']) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($branch['branch_name']); ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>&nbsp;</label><br>
+                  <button type="submit" class="btn btn-primary">Filter</button>
+                  <a href="er_visits.php" class="btn btn-secondary">Reset</a>
+                </div>
+              </div>
+            </div>
+          </form>
+
           <div
             class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
             <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'receptionist'): ?>
@@ -125,13 +172,14 @@ if (isset($_POST['id'])) {
                         <th>Initial Findings</th>
                         <th>Subsequent Care</th>
                         <th>Outcome</th>
+                        <th>Branch</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php if (empty($er_visits)): ?>
                         <tr>
-                          <td colspan="9" class="text-center">No ER visits found.</td>
+                          <td colspan="10" class="text-center">No ER visits found.</td>
                         </tr>
                       <?php else: ?>
                         <?php foreach ($er_visits as $visit): ?>
@@ -144,6 +192,7 @@ if (isset($_POST['id'])) {
                             <td><?php echo htmlspecialchars($visit['initial_findings'] ?? 'N/A'); ?></td>
                             <td><?php echo htmlspecialchars($visit['subsequent_care'] ?? 'N/A'); ?></td>
                             <td><?php echo htmlspecialchars($visit['outcome'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($visit['branch_name'] ?? 'N/A'); ?></td>
                             <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'receptionist'): ?>
                               <td class="text-right d-flex">
                                   <a href="edit-er-visit.php?id=<?php echo $visit['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>

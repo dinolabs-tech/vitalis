@@ -76,22 +76,45 @@ if (isset($_POST['id'])) {
                           <th>Due Date</th>
                           <th>Total Amount</th>
                           <th>Status</th>
+                          <th>Branch</th>
                           <th class="text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <?php
                         $sql = "SELECT i.*, l.staffname AS doctorStaffName, 
-                                                           CONCAT(p.first_name, ' ', p.last_name) AS patientName                                                          
+                                                           CONCAT(p.first_name, ' ', p.last_name) AS patientName,
+                                                           b.branch_name                                                          
                                                     FROM invoices i
                                                     JOIN patients p ON i.patientId = p.id
                                                     LEFT JOIN login l ON i.doctorId = l.id
-                                                    ORDER BY i.created_at DESC";
+                                                    LEFT JOIN branches b ON i.branch_id = b.branch_id";
+                        
+                        $conditions = [];
+                        $params = [];
+                        $types = "";
+
+                        if ($_SESSION['role'] !== 'admin' && isset($_SESSION['branch_id'])) {
+                            $conditions[] = "i.branch_id = ?";
+                            $params[] = $_SESSION['branch_id'];
+                            $types .= "i";
+                        }
+
+                        if (!empty($conditions)) {
+                            $sql .= " WHERE " . implode(" AND ", $conditions);
+                        }
+
+                        $sql .= " ORDER BY i.created_at DESC";
+
                         $stmt = $conn->prepare($sql);
+                        if (!empty($params)) {
+                            $stmt->bind_param($types, ...$params);
+                        }
                         $stmt->execute();
                         $res = $stmt->get_result();
 
-                        while ($row = $res->fetch_object()) {
+                        if ($res->num_rows > 0) {
+                            while ($row = $res->fetch_object()) {
                         ?>
                           <tr>
                             <td>
@@ -110,6 +133,7 @@ if (isset($_POST['id'])) {
                                 <?php echo htmlspecialchars($row->status); ?>
                               </span>
                             </td>
+                            <td><?php echo htmlspecialchars($row->branch_name ?? 'N/A'); ?></td>
 
                             <td class="text-right d-flex">
                                 <a  href="invoice-view.php?id=<?php echo $row->id; ?>" class="btn-icon btn-round btn-primary text-white"><i class="fas fa-eye"></i></a>
@@ -117,7 +141,16 @@ if (isset($_POST['id'])) {
                                 <a href="#" data-id="<?php echo $row->id; ?>" data-invoice-number="<?php echo htmlspecialchars($row->invoiceId); ?>" data-patient-name="<?php echo htmlspecialchars($row->patientName); ?>" class="btn-icon btn-round btn-danger text-white btn-delete-invoice"><i class="fas fa-trash"></i> </a>
                               </td>
                           </tr>
-                        <?php } ?>
+                        <?php 
+                            }
+                        } else {
+                        ?>
+                          <tr>
+                            <td colspan="9" class="text-center">No invoices found.</td>
+                          </tr>
+                        <?php
+                        }
+                        ?>
                       </tbody>
                     </table>
                   </div>

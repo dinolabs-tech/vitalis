@@ -23,6 +23,9 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     $branch_name = $branch['branch_name'];
     $address = $branch['address'];
     $phone = $branch['phone'];
+    $email = $branch['email'];
+    $state = $branch['state'];
+    $country = $branch['country'];
   } else {
     $error_message = "Branch not found.";
   }
@@ -35,9 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $branch_name = isset($_POST['branch_name']) ? $_POST['branch_name'] : '';
   $address = isset($_POST['address']) ? $_POST['address'] : '';
   $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
+  $email = isset($_POST['email']) ? $_POST['email'] : '';
+  $state = isset($_POST['state']) ? $_POST['state'] : '';
+  $country = isset($_POST['country']) ? $_POST['country'] : '';
 
-  $stmt = $conn->prepare("UPDATE branches SET branch_name = ?, address = ?, phone = ? WHERE branch_id = ?");
-  $stmt->bind_param("sssi", $branch_name, $address, $phone, $branch_id);
+  $stmt = $conn->prepare("UPDATE branches SET branch_name = ?, address = ?, phone = ?, email = ?, state = ?, country = ? WHERE branch_id = ?");
+  $stmt->bind_param("ssssssi", $branch_name, $address, $phone, $email, $state, $country, $branch_id);
 
   if ($stmt->execute()) {
     $success_message = "Branch updated successfully!";
@@ -105,6 +111,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   </div>
                   <div class="form-group">
                     <input class="form-control" name="phone" style="border:1px solid red;" placeholder="Contact Info" type="text" value="<?= htmlspecialchars($phone) ?>">
+                  </div>
+                  <div class="form-group">
+                    <input class="form-control" name="email" style="border:1px solid red;" placeholder="Email" type="email" value="<?= htmlspecialchars($email) ?>">
+                  </div>
+                  <div class="form-group">
+                    <input class="form-control" name="state" style="border:1px solid red;" placeholder="State" type="text" value="<?= htmlspecialchars($state) ?>">
+                  </div>
+                  <div class="form-group">
+                    <input class="form-control" name="country" style="border:1px solid red;" placeholder="Country" type="text" value="<?= htmlspecialchars($country) ?>">
                   </div>
 
                   <div class="m-t-20 text-center">

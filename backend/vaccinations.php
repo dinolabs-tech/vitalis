@@ -80,13 +80,39 @@ $sql = "SELECT v.*, p.first_name, p.last_name, s.staffname as administered_by_st
         FROM vaccinations v
         LEFT JOIN patients p ON v.patient_id = p.patient_id
         LEFT JOIN login s ON v.administered_by_staff_id = s.id
-        LEFT JOIN branches b ON v.branch_id = b.branch_id
-        ORDER BY v.administration_date DESC";
-$result = $conn->query($sql);
-if ($result) {
-  while ($row = $result->fetch_assoc()) {
-    $vaccinations[] = $row;
-  }
+        LEFT JOIN branches b ON v.branch_id = b.branch_id";
+
+$conditions = [];
+$params = [];
+$types = "";
+
+if (isset($_GET['branch_id']) && $_GET['branch_id'] !== '') {
+    $conditions[] = "v.branch_id = ?";
+    $params[] = $_GET['branch_id'];
+    $types .= "i";
+}
+
+if (count($conditions) > 0) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$sql .= " ORDER BY v.administration_date DESC";
+
+$stmt = $conn->prepare($sql);
+if ($stmt) {
+    if (count($params) > 0) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $vaccinations[] = $row;
+        }
+    }
+    $stmt->close();
+} else {
+    $error_message = "Failed to prepare statement: " . $conn->error;
 }
 
 // Fetch vaccination data for editing if ID is provided in GET
@@ -163,13 +189,23 @@ if ($result_branches) {
             </ul>
           </div>
 
-          <div
-            class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-              <div class="ms-md-auto py-2 py-md-0">
+          <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+            <div class="ms-md-auto py-2 py-md-0 d-flex align-items-center">
+              <form method="GET" action="vaccinations.php" class="form-inline me-3">
+                <label for="branch_filter" class="form-label me-2">Filter by Branch:</label>
+                <select class="form-control" id="branch_filter" name="branch_id" onchange="this.form.submit()">
+                  <option value="">All Branches</option>
+                  <?php foreach ($branches as $branch): ?>
+                    <option value="<?php echo htmlspecialchars($branch['branch_id']); ?>" <?php echo (isset($_GET['branch_id']) && $_GET['branch_id'] == $branch['branch_id']) ? 'selected' : ''; ?>>
+                      <?php echo htmlspecialchars($branch['branch_name']); ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </form>
+              <?php if ($_SESSION['role'] === 'admin'): ?>
                 <a href="add-vaccination.php" class="btn btn-primary btn-round">Add Vaccination</a>
-              </div>
-            <?php endif; ?>
+              <?php endif; ?>
+            </div>
           </div>
 
           <?php if ($error_message): ?>
