@@ -1,13 +1,14 @@
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Vitalis - Hospital Management System Admin Dashboard</title>
+    <meta name="description" content="Admin Dashboard for Vitalis Hospital Management System" />
     <meta
       content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
       name="viewport"
     />
     <link
       rel="icon"
-      href="assets/img/favicon.ico"
+      href="assets/img/logo.png"
       type="image/x-icon"
     />
 
