@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = "Please enter both username/email and password.";
     } else {
         // Prepare a statement to prevent SQL injection
-        $stmt = $conn->prepare("SELECT id, staffname, username, password, role, email, profile_picture FROM login WHERE username = ? OR email = ?");
+        $stmt = $conn->prepare("SELECT id, staffname, username, password, role, email, profile_picture, branch_id FROM login WHERE username = ? OR email = ?");
         $stmt->bind_param("ss", $username, $username);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -54,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['profile_picture'] = $user['profile_picture'];
+                $_SESSION['branch_id'] = $user['branch_id']; // Save branch_id to session
 
                 // Redirect user to appropriate dashboard based on role
                 if ($user['role'] === 'admin') {
