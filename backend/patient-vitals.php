@@ -99,7 +99,7 @@ $where_clauses = [];
 $params = [];
 $param_types = "";
 
-if ($current_branch_id) {
+if ($_SESSION['role'] !== 'admin' && $current_branch_id) {
     $where_clauses[] = "pv.branch_id = ?";
     $params[] = $current_branch_id;
     $param_types .= "i";
