@@ -46,21 +46,43 @@ if ($user_role !== 'admin' || ($user_role === 'admin' && $user_branch_id !== nul
 
 // Helper function to execute queries with optional branch filter
 function execute_filtered_query($mysqli, $base_query, $branch_filter, $branch_params, $param_types) {
-    $query = $base_query;
+    $query_parts = [];
+    $query_parts['select'] = $base_query;
+    $query_parts['where'] = '';
+    $query_parts['group_by'] = '';
+    $query_parts['order_by'] = '';
+    $query_parts['limit'] = '';
+
+    // Parse the base query to identify existing clauses
+    if (preg_match('/^(.*?)\s(WHERE\s.*?)?\s(GROUP\sBY\s.*?)?\s(ORDER\sBY\s.*?)?\s(LIMIT\s.*?)?$/is', $base_query, $matches)) {
+        $query_parts['select'] = trim($matches[1]);
+        if (!empty($matches[2])) $query_parts['where'] = trim($matches[2]);
+        if (!empty($matches[3])) $query_parts['group_by'] = trim($matches[3]);
+        if (!empty($matches[4])) $query_parts['order_by'] = trim($matches[4]);
+        if (!empty($matches[5])) $query_parts['limit'] = trim($matches[5]);
+    }
+
+    // Apply branch filter
     if (!empty($branch_filter)) {
-        if (stripos($base_query, 'WHERE') !== false) {
-            // If base query already has a WHERE, append with AND
-            $query .= " AND " . substr($branch_filter, strlen(" WHERE "));
+        $branch_condition = substr($branch_filter, strlen(" WHERE ")); // Get just the condition "branch_id = ?"
+        if (!empty($query_parts['where'])) {
+            $query_parts['where'] .= " AND " . $branch_condition;
         } else {
-            // Otherwise, append with WHERE
-            $query .= $branch_filter;
+            $query_parts['where'] = "WHERE " . $branch_condition;
         }
     }
 
+    // Reconstruct the query
+    $final_query = $query_parts['select'];
+    if (!empty($query_parts['where'])) $final_query .= " " . $query_parts['where'];
+    if (!empty($query_parts['group_by'])) $final_query .= " " . $query_parts['group_by'];
+    if (!empty($query_parts['order_by'])) $final_query .= " " . $query_parts['order_by'];
+    if (!empty($query_parts['limit'])) $final_query .= " " . $query_parts['limit'];
+
     if (!empty($branch_params)) {
-        $stmt = $mysqli->prepare($query);
+        $stmt = $mysqli->prepare($final_query);
         if ($stmt === false) {
-            error_log("Prepare failed: " . $mysqli->error);
+            error_log("Prepare failed: " . $mysqli->error . " Query: " . $final_query);
             return false;
         }
         $stmt->bind_param($param_types, ...$branch_params);
@@ -69,7 +91,7 @@ function execute_filtered_query($mysqli, $base_query, $branch_filter, $branch_pa
         $stmt->close();
         return $result;
     } else {
-        return $mysqli->query($query);
+        return $mysqli->query($final_query);
     }
 }
 
