@@ -60,7 +60,12 @@
           <li><a href="faq.php">Frequenty Asked Questions</a></li>
           <li><a href="gallery.php">Gallery</a></li>
           <li><a href="appointment.php">Appointment</a></li>
-          <li><a href="backend/index.php">Login</a></li>
+
+          <?php if (isset($_SESSION['id'])): ?>
+          <li><a href="backend/logout.php">Logout</a></li>
+          <?php else: ?>
+          <li><a href="backend/login.php">Login</a></li>
+          <?php endif; ?>
         </ul>
       </div>
 
@@ -70,11 +75,7 @@
   <div class="container copyright text-center mt-4">
     <p>&copy;<span></span> <strong class="px-1 sitename"><?= date("Y") ?></strong> <span>All Rights Reserved</span></p>
     <div class="credits">
-      <!-- All the links in the footer should remain intact. -->
-      <!-- You can delete the links only if you've purchased the pro version. -->
-      <!-- Licensing information: https://bootstrapmade.com/license/ -->
-      <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
-      Designed by <a href="https://dinolabstech.com/">Dinolabs Tech Services</a>
+      Designed by <a href="https://www.dinolabstech.com/">Dinolabs Tech Services</a>
     </div>
   </div>
 

@@ -72,7 +72,7 @@
         </nav>
 
         <?php if (isset($_SESSION['id'])) { ?>
-            <a class="btn-getstarted" href="appointment.php">Appointment</a>
+            <a class="btn-getstarted" href="backend/index.php">Dashboard</a>
         <?php } ?>
 
     </div>
