@@ -275,7 +275,7 @@ if ($result) {
               <h3 class="fw-bold mb-3">Dashboard</h3>
               <h6 class="op-7 mb-2 fw-bold">Welcome <?= $_SESSION['role'] ?> <?= $_SESSION['staffname'] ?> to Vitalis</h6>
             </div>
-              <?php if ($_SESSION['role'] == 'Superuser') {?>
+              <?php if ($_SESSION['username'] == 'dinolabs') {?>
             <div class="ms-md-auto py-2 py-md-0">
               <a href="developer.php" class="btn btn-danger btn-round me-2"><i class="fas fa-code"></i> &nbsp; Developer Tools</a>
               <!-- <a href="#" class="btn btn-primary btn-round">Add Customer</a> -->
