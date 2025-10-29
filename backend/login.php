@@ -94,13 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center">
             <a href="index.php" class="logo">
-        <img
-          src="assets/img/logo.png"
-          alt="navbar brand"
-          class="navbar-brand"
-          height="37" />
-      </a>
-      <br>
+                <img
+                    src="assets/img/logo.png"
+                    alt="navbar brand"
+                    class="navbar-brand"
+                    height="37" />
+            </a>
+            <br>
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-lg-4 col-md-6 col-sm-8 d-flex flex-column align-items-center justify-content-center">
@@ -116,11 +116,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="form-group">
                                         <input type="password" class="form-control" placeholder="Password" name="password">
                                     </div>
-                                    <div class="form-group text-right">
-                                        <a href="forgot-password.php">Forgot your password?</a>
-                                    </div>
                                     <div class="form-group text-center">
                                         <button type="submit" class="btn btn-primary account-btn rounded text-center">Login</button>
+                                    </div>
+                                    <div class="form-group text-right">
+                                        <a href="forgot-password.php">Forgot your password?</a>
                                     </div>
                                     <div class="text-center register-link">
                                         Don’t have an account? <a href="register.php">Register Now</a>
