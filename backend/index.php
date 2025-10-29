@@ -46,7 +46,17 @@ if ($user_role !== 'admin' || ($user_role === 'admin' && $user_branch_id !== nul
 
 // Helper function to execute queries with optional branch filter
 function execute_filtered_query($mysqli, $base_query, $branch_filter, $branch_params, $param_types) {
-    $query = $base_query . $branch_filter;
+    $query = $base_query;
+    if (!empty($branch_filter)) {
+        if (stripos($base_query, 'WHERE') !== false) {
+            // If base query already has a WHERE, append with AND
+            $query .= " AND " . substr($branch_filter, strlen(" WHERE "));
+        } else {
+            // Otherwise, append with WHERE
+            $query .= $branch_filter;
+        }
+    }
+
     if (!empty($branch_params)) {
         $stmt = $mysqli->prepare($query);
         if ($stmt === false) {
