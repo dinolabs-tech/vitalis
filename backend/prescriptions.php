@@ -75,6 +75,8 @@ if (isset($_POST['delete_id'])) {
 
 // Fetch all prescriptions
 $prescriptions = [];
+$current_branch_id = $_SESSION['branch_id'] ?? null; // Assuming branch_id is stored in session
+
 $sql = " SELECT 
         p.id, 
         pat.first_name, 
@@ -89,10 +91,32 @@ $sql = " SELECT
     JOIN medications m ON p.medication_id = m.id
     JOIN products prod ON m.product_id = prod.id
     JOIN login l ON p.doctor_id = l.id
-    JOIN branches br ON p.branch_id = br.branch_id
-        ORDER BY p.created_at DESC";
+    LEFT JOIN branches br ON p.branch_id = br.branch_id";
 
-$result = $conn->query($sql);
+$where_clauses = [];
+$params = [];
+$param_types = "";
+
+if ($current_branch_id) {
+    $where_clauses[] = "p.branch_id = ?";
+    $params[] = $current_branch_id;
+    $param_types .= "i";
+}
+
+if (!empty($where_clauses)) {
+    $sql .= " WHERE " . implode(" AND ", $where_clauses);
+}
+
+$sql .= " ORDER BY p.created_at DESC";
+
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($param_types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $prescriptions[] = $row;
@@ -213,7 +237,7 @@ if ($result_doctors) {
                         <th>Dosage</th>
                         <th>Prescription Date</th>
                         <th>Doctor</th>
-                        <th>Branch</th>
+                        <th>Branch Name</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>

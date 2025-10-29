@@ -33,11 +33,37 @@ if (isset($_POST['id'])) {
 }
 
 // Fetch schedule data
-$sql = "SELECT ds.id, l.specialization, l.staffname AS doctor_name, ds.day_of_week, ds.start_time, ds.end_time, ds.status
+$current_branch_id = $_SESSION['branch_id'] ?? null; // Assuming branch_id is stored in session
+
+$sql = "SELECT ds.id, l.specialization, l.staffname AS doctor_name, ds.day_of_week, ds.start_time, ds.end_time, ds.status, b.branch_name
         FROM doctor_schedules ds
         JOIN login l ON ds.doctor_id = l.id
-        ";
-$result = $conn->query($sql);
+        LEFT JOIN branches b ON ds.branch_id = b.branch_id";
+
+$where_clauses = [];
+$params = [];
+$param_types = "";
+
+if ($current_branch_id) {
+    $where_clauses[] = "ds.branch_id = ?";
+    $params[] = $current_branch_id;
+    $param_types .= "i";
+}
+
+if (!empty($where_clauses)) {
+    $sql .= " WHERE " . implode(" AND ", $where_clauses);
+}
+
+$sql .= " ORDER BY l.staffname ASC";
+
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($param_types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
 
 ?>
 
@@ -106,6 +132,7 @@ $result = $conn->query($sql);
                       <th>Available Day</th>
                       <th>Available Time</th>
                       <th>Status</th>
+                      <th>Branch Name</th>
                       <th class="text-right">Action</th>
                     </tr>
                   </thead>
@@ -121,6 +148,7 @@ $result = $conn->query($sql);
                           <td><?php echo $row['day_of_week']; ?></td>
                           <td><?php echo date('h:i A', strtotime($row['start_time'])) . ' - ' . date('h:i A', strtotime($row['end_time'])); ?></td>
                           <td><span class="custom-badge <?php echo $status_class; ?>"><?php echo ucfirst($row['status']); ?></span></td>
+                          <td><?php echo htmlspecialchars($row['branch_name'] ?? 'N/A'); ?></td>
                           <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'receptionist' || $_SESSION['role'] === 'doctor'): ?>
                             <td class="text-right d-flex">
                               <a href="edit-schedule.php?id=<?php echo $row['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
@@ -135,7 +163,7 @@ $result = $conn->query($sql);
                       }
                     } else { ?>
                       <tr>
-                        <td colspan='6' class='text-center'>No schedules found.</td>
+                        <td colspan='7' class='text-center'>No schedules found.</td>
                       </tr>
                     <?php  }
                     ?>

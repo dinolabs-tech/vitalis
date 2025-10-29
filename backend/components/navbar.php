@@ -44,28 +44,41 @@
       </nav>
 
       <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
-        <!-- <li
-          class="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none">
-          <a
-            class="nav-link dropdown-toggle"
-            data-bs-toggle="dropdown"
-            href="#"
-            role="button"
-            aria-expanded="false"
-            aria-haspopup="true">
-            <i class="fa fa-search"></i>
-          </a>
-          <ul class="dropdown-menu dropdown-search animated fadeIn">
-            <form class="navbar-left navbar-form nav-search">
-              <div class="input-group">
-                <input
-                  type="text"
-                  placeholder="Search ..."
-                  class="form-control" />
-              </div>
-            </form>
-          </ul>
-        </li> -->
+        <?php
+        // Include database connection if not already included
+        if (!isset($conn)) {
+            include_once('database/db_connect.php');
+        }
+
+        // Fetch all branches for the dropdown
+        $branches_for_dropdown = [];
+        $result_branches_dropdown = $conn->query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name ASC");
+        if ($result_branches_dropdown) {
+            while ($row = $result_branches_dropdown->fetch_assoc()) {
+                $branches_for_dropdown[] = $row;
+            }
+        }
+
+        // Handle branch selection
+        if (isset($_POST['selected_branch_id'])) {
+            $_SESSION['branch_id'] = $_POST['selected_branch_id'];
+            // Redirect to the current page to apply the filter
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
+        ?>
+        <li class="nav-item dropdown hidden-caret">
+          <form action="" method="POST" class="form-inline">
+            <select name="selected_branch_id" class="form-control form-select" onchange="this.form.submit()">
+              <option value="">All Branches</option>
+              <?php foreach ($branches_for_dropdown as $branch_option): ?>
+                <option value="<?php echo $branch_option['branch_id']; ?>" <?php echo (isset($_SESSION['branch_id']) && $_SESSION['branch_id'] == $branch_option['branch_id']) ? 'selected' : ''; ?>>
+                  <?php echo htmlspecialchars($branch_option['branch_name']); ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </form>
+        </li>
         <li class="nav-item topbar-icon dropdown hidden-caret">
           <a
             class="nav-link dropdown-toggle"

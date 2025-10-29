@@ -81,12 +81,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 
 // Fetch all patient bills
 $patient_bills = [];
-$sql = "SELECT pb.*, CONCAT(p.first_name, ' ' ,p.last_name) AS patient_name, a.id as admission_number
+$current_branch_id = $_SESSION['branch_id'] ?? null; // Assuming branch_id is stored in session
+
+$sql = "SELECT pb.*, CONCAT(p.first_name, ' ' ,p.last_name) AS patient_name, a.id as admission_number, b.branch_name
         FROM patient_bills pb
         LEFT JOIN patients p ON pb.patient_id = p.id
         LEFT JOIN admissions a ON pb.admission_id = a.id
-        ORDER BY pb.bill_date DESC";
-$result = $conn->query($sql);
+        LEFT JOIN branches b ON pb.branch_id = b.branch_id";
+
+$where_clauses = [];
+$params = [];
+$param_types = "";
+
+if ($current_branch_id) {
+    $where_clauses[] = "pb.branch_id = ?";
+    $params[] = $current_branch_id;
+    $param_types .= "i";
+}
+
+if (!empty($where_clauses)) {
+    $sql .= " WHERE " . implode(" AND ", $where_clauses);
+}
+
+$sql .= " ORDER BY pb.bill_date DESC";
+
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($param_types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $patient_bills[] = $row;
@@ -201,6 +227,7 @@ if ($result_admissions) {
                         <th>Total Amount</th>
                         <th>Bill Date</th>
                         <th>Status</th>
+                        <th>Branch Name</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>
@@ -217,6 +244,7 @@ if ($result_admissions) {
                             <td><?php echo htmlspecialchars($bill['total_amount']); ?></td>
                             <td><?php echo htmlspecialchars($bill['bill_date']); ?></td>
                             <td><?php echo htmlspecialchars($bill['status']); ?></td>
+                            <td><?php echo htmlspecialchars($bill['branch_name'] ?? 'N/A'); ?></td>
                             <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'receptionist'): ?>
                               <td class="text-right d-flex">
                                   <a href="edit-patient-bill.php?id=<?php echo $bill['id']; ?>" class="btn-icon btn-round btn-primary text-white mx-2"><i class="fas fa-edit"></i></a>
@@ -227,7 +255,7 @@ if ($result_admissions) {
                         <?php endforeach; ?>
                       <?php else: ?>
                         <tr>
-                          <td colspan="10" class="text-center">No patient bills found.</td>
+                          <td colspan="11" class="text-center">No patient bills found.</td>
                         </tr>
                       <?php endif; ?>
                     </tbody>

@@ -65,11 +65,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id']) && !isset($_POS
 
 // Fetch all doctor notes
 $doctor_notes = [];
-$sql = "SELECT dn.note_id, dn.patient_id, dn.doctor_id, dn.note_title, dn.note_content, dn.created_at, p.first_name, p.last_name, l.staffname as doctor_name
+$current_branch_id = $_SESSION['branch_id'] ?? null; // Assuming branch_id is stored in session
+
+$sql = "SELECT dn.note_id, dn.patient_id, dn.doctor_id, dn.note_title, dn.note_content, dn.created_at, p.first_name, p.last_name, l.staffname as doctor_name, b.branch_name
         FROM doctor_notes dn
         LEFT JOIN patients p ON dn.patient_id = p.id
         LEFT JOIN login l ON dn.doctor_id = l.id
-        ORDER BY dn.created_at DESC";
+        LEFT JOIN branches b ON dn.branch_id = b.branch_id";
+
+$where_clauses = [];
+$params = [];
+$param_types = "";
+
+if ($current_branch_id) {
+    $where_clauses[] = "dn.branch_id = ?";
+    $params[] = $current_branch_id;
+    $param_types .= "i";
+}
+
+if (!empty($where_clauses)) {
+    $sql .= " WHERE " . implode(" AND ", $where_clauses);
+}
+
+$sql .= " ORDER BY dn.created_at DESC";
+
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($param_types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
 $result = $conn->query($sql);
 if ($result) {
   while ($row = $result->fetch_assoc()) {
@@ -179,6 +206,7 @@ if ($result_doctors) {
                       <tr>
                         <th>Patient Name</th>
                         <th>Doctor Name</th>
+                        <th>Branch Name</th>
                         <th>Note Title</th>
                         <th>Note Content</th>
                         <th>Created At</th>
@@ -191,6 +219,7 @@ if ($result_doctors) {
                           <tr>
                             <td><?php echo htmlspecialchars($note['first_name'] . ' ' . $note['last_name']); ?></td>
                             <td><?php echo htmlspecialchars($note['doctor_name'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($note['branch_name'] ?? 'N/A'); ?></td>
                             <td><?php echo htmlspecialchars($note['note_title']); ?></td>
                             <td><?php echo htmlspecialchars(substr($note['note_content'], 0, 100)) . (strlen($note['note_content']) > 100 ? '...' : ''); ?></td>
                             <td><?php echo htmlspecialchars($note['created_at']); ?></td>
@@ -204,7 +233,7 @@ if ($result_doctors) {
                         <?php endforeach; ?>
                       <?php else: ?>
                         <tr>
-                          <td colspan="6" class="text-center">No doctor notes found.</td>
+                          <td colspan="7" class="text-center">No doctor notes found.</td>
                         </tr>
                       <?php endif; ?>
                     </tbody>

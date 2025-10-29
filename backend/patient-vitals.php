@@ -87,12 +87,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch all patient vitals
 $patient_vitals = [];
-$sql = "SELECT pv.*, p.first_name, p.last_name, s.staffname as recorded_by_staff_name
+$current_branch_id = $_SESSION['branch_id'] ?? null; // Assuming branch_id is stored in session
+
+$sql = "SELECT pv.*, p.first_name, p.last_name, s.staffname as recorded_by_staff_name, b.branch_name
         FROM patient_vitals pv
         LEFT JOIN patients p ON pv.patient_id = p.patient_id
         LEFT JOIN login s ON pv.recorded_by_staff_id = s.id
-        ORDER BY pv.recorded_at DESC";
-$result = $conn->query($sql);
+        LEFT JOIN branches b ON pv.branch_id = b.branch_id";
+
+$where_clauses = [];
+$params = [];
+$param_types = "";
+
+if ($current_branch_id) {
+    $where_clauses[] = "pv.branch_id = ?";
+    $params[] = $current_branch_id;
+    $param_types .= "i";
+}
+
+if (!empty($where_clauses)) {
+    $sql .= " WHERE " . implode(" AND ", $where_clauses);
+}
+
+$sql .= " ORDER BY pv.recorded_at DESC";
+
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($param_types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $patient_vitals[] = $row;
@@ -207,6 +233,7 @@ if ($result_staff) {
                         <th>Height (cm)</th>
                         <th>SpO2 (%)</th>
                         <th>Recorded By</th>
+                        <th>Branch Name</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>
@@ -225,6 +252,7 @@ if ($result_staff) {
                             <td><?php echo htmlspecialchars($vital['height_cm'] ?? 'N/A'); ?></td>
                             <td><?php echo htmlspecialchars($vital['blood_oxygen_saturation'] ?? 'N/A'); ?></td>
                             <td><?php echo htmlspecialchars($vital['recorded_by_staff_name'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($vital['branch_name'] ?? 'N/A'); ?></td>
                             <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'nurse' || $_SESSION['role'] === 'doctor'): ?>
                               <td class="text-right d-flex">
                                 <a href="edit-patient-vital.php?editid=<?php echo $vital['id']; ?>" class="btn-icon btn-round btn-primary text-white mx-2"><i class="fas fa-edit"></i></a>
@@ -237,7 +265,7 @@ if ($result_staff) {
                         <?php endforeach; ?>
                       <?php else: ?>
                         <tr>
-                          <td colspan="12" class="text-center">No patient vitals found.</td>
+                          <td colspan="13" class="text-center">No patient vitals found.</td>
                         </tr>
                       <?php endif; ?>
                     </tbody>

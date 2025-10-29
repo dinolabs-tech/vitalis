@@ -12,17 +12,44 @@ $error_message = '';
 
 // Placeholder for drug consultation data retrieval
 $drug_consultations = [];
+$current_branch_id = $_SESSION['branch_id'] ?? null; // Assuming branch_id is stored in session
+
 $sql = "SELECT dc.*,
             p.first_name,
             p.last_name,
             l.staffname AS doctor_name,
-            pr.name AS medication_name
+            pr.name AS medication_name,
+            b.branch_name
         FROM drug_consultations dc
         LEFT JOIN patients p ON dc.patient_id = p.patient_id
         LEFT JOIN login l ON dc.doctor_id = l.id
-        LEFT JOIN products pr ON dc.drug_id = pr.id -- Corrected join: drug_id in dc directly links to products.id
-        ORDER BY dc.consultation_date DESC";
-$result = $conn->query($sql);
+        LEFT JOIN products pr ON dc.drug_id = pr.id
+        LEFT JOIN branches b ON dc.branch_id = b.branch_id";
+
+$where_clauses = [];
+$params = [];
+$param_types = "";
+
+if ($current_branch_id) {
+    $where_clauses[] = "dc.branch_id = ?";
+    $params[] = $current_branch_id;
+    $param_types .= "i";
+}
+
+if (!empty($where_clauses)) {
+    $sql .= " WHERE " . implode(" AND ", $where_clauses);
+}
+
+$sql .= " ORDER BY dc.consultation_date DESC";
+
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($param_types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {
     $drug_consultations[] = $row;
@@ -105,13 +132,14 @@ if (isset($_SESSION['error_message'])) {
                         <th>Drug Name</th>
                         <th>Consultation Date</th>
                         <th>Notes</th>
+                        <th>Branch Name</th>
                         <th class="text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php if (empty($drug_consultations)): ?>
                         <tr>
-                          <td colspan="6" class="text-center">No drug consultations found.</td>
+                          <td colspan="7" class="text-center">No drug consultations found.</td>
                         </tr>
                       <?php else: ?>
                         <?php foreach ($drug_consultations as $consult): ?>
@@ -121,6 +149,7 @@ if (isset($_SESSION['error_message'])) {
                             <td><?php echo htmlspecialchars($consult['medication_name'] ?? 'N/A'); ?></td>
                             <td><?php echo htmlspecialchars($consult['consultation_date']); ?></td>
                             <td><?php echo htmlspecialchars($consult['consultation_notes']); ?></td>
+                            <td><?php echo htmlspecialchars($consult['branch_name'] ?? 'N/A'); ?></td>
                             <?php if ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'pharmacist' || $_SESSION['role'] === 'receptionist'): ?>
                               <td class="text-right d-flex">
                                 <a href="edit-drug-consultation.php?id=<?php echo $consult['id']; ?>" class="btn-primary btn-icon btn-round text-white mx-2"><i class="fas fa-edit"></i></a>
