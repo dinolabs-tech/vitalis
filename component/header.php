@@ -73,6 +73,8 @@
 
         <?php if (isset($_SESSION['id'])) { ?>
             <a class="btn-getstarted" href="backend/index.php">Dashboard</a>
+        <?php } else { ?>
+            <a class="btn-getstarted" href="backend/login.php">Login</a>
         <?php } ?>
 
     </div>
