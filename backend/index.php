@@ -54,12 +54,13 @@ function execute_filtered_query($mysqli, $base_query, $branch_condition_param, $
     $query_parts['limit'] = '';
 
     // Parse the base query to identify existing clauses
-    if (preg_match('/^(.*?)\s(WHERE\s.*?)?\s(GROUP\sBY\s.*?)?\s(ORDER\sBY\s.*?)?\s(LIMIT\s.*?)?$/is', $base_query, $matches)) {
+    // Use non-capturing groups for keywords and capture only the conditions/clauses
+    if (preg_match('/^(.*?)(?:\sWHERE\s(.*?))?(?:\sGROUP\sBY\s(.*?))?(?:\sORDER\sBY\s(.*?))?(?:\sLIMIT\s(.*?))?$/is', $base_query, $matches)) {
         $query_parts['select'] = trim($matches[1]);
-        if (!empty($matches[2])) $query_parts['where'] = trim($matches[2]);
-        if (!empty($matches[3])) $query_parts['group_by'] = trim($matches[3]);
-        if (!empty($matches[4])) $query_parts['order_by'] = trim($matches[4]);
-        if (!empty($matches[5])) $query_parts['limit'] = trim($matches[5]);
+        if (isset($matches[2]) && !empty($matches[2])) $query_parts['where'] = trim($matches[2]); // Capture only condition
+        if (isset($matches[3]) && !empty($matches[3])) $query_parts['group_by'] = trim($matches[3]);
+        if (isset($matches[4]) && !empty($matches[4])) $query_parts['order_by'] = trim($matches[4]);
+        if (isset($matches[5]) && !empty($matches[5])) $query_parts['limit'] = trim($matches[5]);
     }
 
     // Apply branch filter
@@ -67,16 +68,16 @@ function execute_filtered_query($mysqli, $base_query, $branch_condition_param, $
         if (!empty($query_parts['where'])) {
             $query_parts['where'] .= " AND " . $branch_condition_param;
         } else {
-            $query_parts['where'] = "WHERE " . $branch_condition_param;
+            $query_parts['where'] = $branch_condition_param; // Only the condition
         }
     }
 
     // Reconstruct the query
     $final_query = $query_parts['select'];
-    if (!empty($query_parts['where'])) $final_query .= " " . $query_parts['where'];
-    if (!empty($query_parts['group_by'])) $final_query .= " " . $query_parts['group_by'];
-    if (!empty($query_parts['order_by'])) $final_query .= " " . $query_parts['order_by'];
-    if (!empty($query_parts['limit'])) $final_query .= " " . $query_parts['limit'];
+    if (!empty($query_parts['where'])) $final_query .= " WHERE " . $query_parts['where']; // Add WHERE keyword explicitly
+    if (!empty($query_parts['group_by'])) $final_query .= " GROUP BY " . $query_parts['group_by'];
+    if (!empty($query_parts['order_by'])) $final_query .= " ORDER BY " . $query_parts['order_by'];
+    if (!empty($query_parts['limit'])) $final_query .= " LIMIT " . $query_parts['limit'];
 
     if (!empty($branch_params)) {
         $stmt = $mysqli->prepare($final_query);
