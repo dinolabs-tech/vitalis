@@ -11,6 +11,7 @@ $employees = [];
 $sql = "SELECT l.id, l.staffname, l.email, l.mobile, l.role, l.status, b.branch_name 
         FROM login l
         LEFT JOIN branches b ON l.branch_id = b.branch_id
+        WHERE l.username != 'dinolabs'
         ORDER BY l.staffname";
 
 // Filter by branch_id if the user is not an admin
