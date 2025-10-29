@@ -81,14 +81,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'clear_log' && isset($_GET['lo
 
 <!DOCTYPE html>
 <html lang="en">
-<?php include('component/head.php'); ?>
+<?php include('components/head.php'); ?>
 
 <body>
   <div class="wrapper">
-    <?php include('component/sidebar.php'); ?>
+    <?php include('components/sidebar.php'); ?>
 
     <div class="main-panel">
-      <?php include('component/navbar.php'); ?>
+      <?php include('components/navbar.php'); ?>
 
 
             <div class="container">
