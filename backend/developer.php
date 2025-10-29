@@ -2,9 +2,9 @@
 session_start();
 
 // Check if the user is logged in and is a super user
-if (!isset($_SESSION['user_id']) || $_SESSION['username'] !== 'dinolabs') {
-    // header("Location: login.php");
-    // exit();
+if (!isset($_SESSION['user_id']) && $_SESSION['username'] !== 'dinolabs') {
+    header("Location: login.php");
+    exit();
 }
 
 // Handle log fetching
