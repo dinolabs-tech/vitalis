@@ -34,18 +34,18 @@ $doctorTotalAppointmentsToday = 0;
 $doctorTotalPatientsAttended = 0;
 
 // Prepare branch filter for SQL queries
-$branch_filter = '';
+$branch_filter_condition = ''; // Renamed to hold just the condition
 $branch_params = [];
 $param_types = '';
 
 if ($user_role !== 'admin' || ($user_role === 'admin' && $user_branch_id !== null)) {
-    $branch_filter = " WHERE branch_id = ?";
+    $branch_filter_condition = "branch_id = ?"; // Just the condition, no WHERE
     $branch_params = [$user_branch_id];
     $param_types = 'i';
 }
 
 // Helper function to execute queries with optional branch filter
-function execute_filtered_query($mysqli, $base_query, $branch_filter, $branch_params, $param_types) {
+function execute_filtered_query($mysqli, $base_query, $branch_condition_param, $branch_params, $param_types) {
     $query_parts = [];
     $query_parts['select'] = $base_query;
     $query_parts['where'] = '';
@@ -63,12 +63,11 @@ function execute_filtered_query($mysqli, $base_query, $branch_filter, $branch_pa
     }
 
     // Apply branch filter
-    if (!empty($branch_filter)) {
-        $branch_condition = substr($branch_filter, strlen(" WHERE ")); // Get just the condition "branch_id = ?"
+    if (!empty($branch_condition_param)) {
         if (!empty($query_parts['where'])) {
-            $query_parts['where'] .= " AND " . $branch_condition;
+            $query_parts['where'] .= " AND " . $branch_condition_param;
         } else {
-            $query_parts['where'] = "WHERE " . $branch_condition;
+            $query_parts['where'] = "WHERE " . $branch_condition_param;
         }
     }
 
@@ -96,59 +95,59 @@ function execute_filtered_query($mysqli, $base_query, $branch_filter, $branch_pa
 }
 
 // Fetch general metrics
-$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM patients", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM patients", $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   $totalPatients = $result->fetch_assoc()['count'];
 }
 
-$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM login WHERE role ='doctor'", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM login WHERE role ='doctor'", $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   $totalDoctors = $result->fetch_assoc()['count'];
 }
 
-$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM appointments", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM appointments", $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   $totalAppointments = $result->fetch_assoc()['count'];
 }
 
-$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM rooms WHERE status = 'occupied'", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM rooms WHERE status = 'occupied'", $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   $occupiedRooms = $result->fetch_assoc()['count'];
 }
 
-$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM rooms WHERE status = 'available'", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM rooms WHERE status = 'available'", $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   $availableRooms = $result->fetch_assoc()['count'];
 }
 
 $today = date('Y-m-d');
 $query_appointments_today = "SELECT COUNT(*) AS count FROM appointments WHERE appointment_date = '$today'";
-$result = execute_filtered_query($mysqli, $query_appointments_today, $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, $query_appointments_today, $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   $appointmentsToday = $result->fetch_assoc()['count'];
 }
 
-$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM lab_tests WHERE status = 'pending'", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM lab_tests WHERE status = 'pending'", $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   $pendingLabTests = $result->fetch_assoc()['count'];
 }
 
-$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM radiology_records WHERE status = 'pending'", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT COUNT(*) AS count FROM radiology_records WHERE status = 'pending'", $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   $pendingRadiology = $result->fetch_assoc()['count'];
 }
 
-$result = execute_filtered_query($mysqli, "SELECT SUM(total_amount) AS total FROM patient_bills WHERE status = 'pending'", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT SUM(total_amount) AS total FROM patient_bills WHERE status = 'pending'", $branch_filter_condition, $branch_params, $param_types);
 if ($result && $result->num_rows > 0) {
   $totalPendingBills = $result->fetch_assoc()['total'] ?? 0;
 }
 
-$result = execute_filtered_query($mysqli, "SELECT SUM(total_amount) AS total FROM patient_bills WHERE status = 'paid'", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT SUM(total_amount) AS total FROM patient_bills WHERE status = 'paid'", $branch_filter_condition, $branch_params, $param_types);
 if ($result && $result->num_rows > 0) {
   $totalPaidBills = $result->fetch_assoc()['total'] ?? 0;
 }
 
-$result = execute_filtered_query($mysqli, "SELECT SUM(total_amount) AS total FROM patient_bills WHERE status = 'cancelled'", $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, "SELECT SUM(total_amount) AS total FROM patient_bills WHERE status = 'cancelled'", $branch_filter_condition, $branch_params, $param_types);
 if ($result && $result->num_rows > 0) {
   $totalCancelledBills = $result->fetch_assoc()['total'] ?? 0;
 }
@@ -156,14 +155,14 @@ if ($result && $result->num_rows > 0) {
 // Expected Monthly Payroll (sum of all salaries for the current month)
 $currentMonth = date('Y-m');
 $query_payroll = "SELECT SUM(net_salary) AS total FROM salary WHERE DATE_FORMAT(salary_date, '%Y-%m') = '$currentMonth'";
-$result = execute_filtered_query($mysqli, $query_payroll, $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, $query_payroll, $branch_filter_condition, $branch_params, $param_types);
 if ($result && $result->num_rows > 0) {
   $expectedMonthlyPayroll = $result->fetch_assoc()['total'] ?? 0;
 }
 
 // Get the total number of admissions in the last 30 days.
 $query_admissions = "SELECT COUNT(*) AS total_admissions FROM admissions WHERE admission_date >= DATE(NOW()) - INTERVAL 30 DAY";
-$result = execute_filtered_query($conn, $query_admissions, $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($conn, $query_admissions, $branch_filter_condition, $branch_params, $param_types);
 $total_admissions = $result->fetch_assoc()['total_admissions'];
 
 // Simple moving average prediction for the next month's admissions.
@@ -221,7 +220,7 @@ for ($i = 5; $i >= 0; $i--) {
   $month = date('Y-m', strtotime("-$i month"));
   $monthLabel = date('M Y', strtotime("-$i month"));
   $query_appointment_trends = "SELECT COUNT(*) AS count FROM appointments WHERE DATE_FORMAT(appointment_date, '%Y-%m') = '$month'";
-  $result = execute_filtered_query($mysqli, $query_appointment_trends, $branch_filter, $branch_params, $param_types);
+  $result = execute_filtered_query($mysqli, $query_appointment_trends, $branch_filter_condition, $branch_params, $param_types);
   $count = 0;
   if ($result && $result->num_rows > 0) {
     $count = $result->fetch_assoc()['count'];
@@ -234,7 +233,7 @@ for ($i = 5; $i >= 0; $i--) {
 $topProceduresData = [];
 $topProceduresLabels = [];
 $query_top_procedures = "SELECT service_name, COUNT(*) AS count FROM services GROUP BY service_name ORDER BY count DESC LIMIT 5"; // Assuming 'services' table has service_name
-$result = execute_filtered_query($mysqli, $query_top_procedures, $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, $query_top_procedures, $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $topProceduresLabels[] = $row['service_name'];
@@ -245,7 +244,7 @@ if ($result) {
 // Fetch data for Bed Occupancy Map
 $bedOccupancyData = [];
 $query_bed_occupancy = "SELECT room_number, status FROM rooms";
-$result = execute_filtered_query($mysqli, $query_bed_occupancy, $branch_filter, $branch_params, $param_types);
+$result = execute_filtered_query($mysqli, $query_bed_occupancy, $branch_filter_condition, $branch_params, $param_types);
 if ($result) {
   while ($row = $result->fetch_assoc()) {
     $bedOccupancyData[] = [
