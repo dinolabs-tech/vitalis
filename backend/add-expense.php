@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       try {
         // Insert into expenses table
         // Assuming 'patient_id' column exists in 'expenses' table
-        $stmt = $mysqli->prepare("INSERT INTO expenses (patient_id, itemName, purchaseFrom, purchaseDate, paidBy, amount, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $mysqli->prepare("INSERT INTO expenses (id, itemName, purchaseFrom, purchaseDate, paidBy, amount, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("isssssss", $patient_id, $item, $purchase_from, $purchase_date, $purchased_by, $amount, $status, $notes);
 
         if (!$stmt->execute()) {
