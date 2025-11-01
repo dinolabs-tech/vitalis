@@ -46,11 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $staff_id = $stmt_login->insert_id;
       $stmt_login->close();
 
-      // Insert into doctors table
-      $stmt_doctor = $conn->prepare("INSERT INTO doctors (doctor_id, staff_id, specialization, license_number, branch_id) VALUES (?, ?, ?, ?, ?)");
-      $doctor_id = 'DR' . str_pad($staff_id, 5, '0', STR_PAD_LEFT); // Generate a simple doctor_id
-      $stmt_doctor->bind_param("sisss", $doctor_id, $staff_id, $specialization, $license_number, $branch_id);
-
       if (!$stmt_doctor->execute()) {
         throw new Exception("Error creating doctor profile: " . $stmt_doctor->error);
       }
